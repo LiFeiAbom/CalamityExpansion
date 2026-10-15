@@ -15,7 +15,7 @@ namespace CalamityExpansion.Content.Items.Weapons.Ranged
     /// 物品本体既不出图也不挥砍，左右键都只负责把持握弹幕 <see cref="NeutronGunHoldout"/> 拿出来；
     /// 瞄准、开火、蓄力、充能条全由该弹幕自行结算。
     /// 伤害：面板基础值 **580**；配置「数值膨胀」开启时通过 <see cref="ModifyWeaponDamage"/> 回调到
-    /// <see cref="InflatedDamage"/>（本工程口径为中子之刃同倍率 ×5，**待用户复核**）。
+    /// <see cref="InflatedDamage"/>（本工程口径为中子之刃同倍率 ×5；用户 2026-10-15 实测后确认收下）。
     /// </summary>
     internal class NeutronGun : ModItem
     {
@@ -54,8 +54,8 @@ namespace CalamityExpansion.Content.Items.Weapons.Ranged
             // 已按用户要求整体删除——它会把档号存进物品存档，读回来时反过来盖掉新稀有度。
         }
         /// <summary>
-        /// 数值膨胀后的面板伤害。中子之刃的口径是「源值 → ×5」（855 → 4275），本件按同倍率取 580 → 2900，
-        /// **待用户复核**：他若点名别的档位，改这一处即可（武器与右键弹都是按面板放缩的，无需另改）。
+        /// 数值膨胀后的面板伤害。中子之刃的口径是「源值 → ×5」（855 → 4275），本件按同倍率取 580 → 2900
+        /// （**用户 2026-10-15 实测后确认收下**）。要再调档位只改这一处即可——武器与右键弹都按面板放缩。
         /// </summary>
         private const float InflatedDamage = 2900f;
         /// <summary>
