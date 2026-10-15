@@ -24,15 +24,31 @@ Items: {
 			提前松手会导致能量外溢
 			'''
 	}
+
+	NeutronGun: {
+		DisplayName: 中子脉冲
+		Tooltip:
+			'''
+			发射重力弹丸，命中目标时生成中子星翘曲点并落下数道伽马射线
+			右键切换为重击形态：射速大幅放慢，但单发威力成倍提升
+			每次开火都会给枪械充能，充能满格后再次开火会在鼠标处引发一次中子星爆炸
+			"把太阳射下来!"
+			'''
+	}
 }
 
 Rarities.NeutronRarity.DisplayName: 中子
 
 Projectiles: {
 	CENeutronExplode.DisplayName: 中子大爆点
+	CENeutronExplosionRanged.DisplayName: 中子大爆点
+	NeutronBullet.DisplayName: 中子弹
 	NeutronExplode.DisplayName: 中子爆点
+	NeutronExplosionRanged.DisplayName: 中子爆点
+	NeutronGunHoldout.DisplayName: 中子脉冲
 	NeutronGlaiveBeam.DisplayName: 中子之刃光束
 	NeutronGlaiveHeld.DisplayName: 中子之刃
+	NeutronLaser.DisplayName: 中子光束
 	NeutronsOrb.DisplayName: 中子球
 }
 
@@ -56,6 +72,7 @@ Configs: {
 				'''
 				把本模组已接入武器的数值回调到作者点名的膨胀档。
 				中子之刃：开启后面板伤害由 855 抬到 4275（右键大爆点按面板 ×10 生成，会跟着一起抬高）。
+				中子脉冲：开启后面板伤害由 580 抬到 2900（左右键射出的中子弹与右键大爆点都按面板派生，会跟着一起抬高）。
 				与其它开关互不影响，游戏内切换即时生效、不需要重载。
 				默认：关闭。
 				'''

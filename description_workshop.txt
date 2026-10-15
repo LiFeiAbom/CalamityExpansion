@@ -2,4 +2,6 @@
 
 第一批：中子之刃（Neutron Blade）与其链条。
 
+第二批：中子脉冲（Neutron Pulse）与其链条 —— 中子弹、中子光束与远程侧的中子爆点。
+
 软依赖：CalamityMod / CalamityModClassicPreTrailer（未安装时对应配方不注册）。

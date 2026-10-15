@@ -11,7 +11,8 @@ tModLoader 1.4.4 / net8.0，显示名 `CalamityExpansion`，作者 LF。
 软依赖：`weakReferences = CalamityMod, CalamityModClassicPreTrailer`（见 `build.txt`）；
 代码里一律用 `ModLoader.TryGetMod` / `TryFind<ModItem|ModTile|ModBuff>` 按名字取内容，不写死类型引用。
 
-工程于 2026-10-15 新建（空白模板），同一天开始首批内容移植；目前全部内容为「中子」链。
+工程于 2026-10-15 新建（空白模板），同一天开始内容移植，当天落了两批：**中子之刃整链**与**中子脉冲整链**；
+目前全部内容为「中子」链。
 姊妹工程 `CalamityDemutation` 的规则是「只收灾厄本体与 CI 来源、不收 CWR（灾厄大修）与 CE（灾厄：熵）」，
 **本工程不受该限制**（这正是它存在的理由之一），但两工程的换算/命名/工作流口径仍然通用。
 
@@ -68,13 +69,36 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
   中子熵变（名称 + 描述）、以及中子链五枚弹幕的显示名。
 - `Tools/CheckResources.ps1`、`Tools/CheckImplicitTextures.ps1` —— 从 `CalamityDemutation\Tools` 拷来并把脚本内模组名改成 `CalamityExpansion`。
 
+### 3.1 第二批（2026-10-15，中子脉冲整链）
+
+来源 `19ad483^`（中子脉冲链本体）：
+
+| 类别 | 文件 |
+|---|---|
+| 武器 | `Content/Items/Weapons/Ranged/NeutronGun.cs` + `.png`（显示名「中子脉冲」/ en `Neutron Pulse`）+ `NeutronGun2.png`（右键重击时的替换贴图） |
+| 弹幕 | `Content/Projectiles/Ranged/{NeutronGunHoldout, NeutronBullet, NeutronLaser, NeutronExplosionRanged, CENeutronExplosionRanged}.cs`（+ `NeutronBullet.png`，32×256 等离子长矛） |
+| 基类 | `Content/Projectiles/BaseProjectiles/BaseGunHoldoutCE.cs`（枪械式手持弹幕基类，原 `BaseGunHoldoutCO`，移植自灾厄 `BaseGunHoldoutProjectile`） |
+| 扭曲管线 | `Common/Effects/NeutronWarpHelper.cs`（第一次带进来的 helper）+ `Effects/NeutronWarp.{fx,fxc}`。着色器里有五支技法（GravitationalVortex / ShockwaveRing / RelativisticJet / GravitationalLens / KamuiLine），本批只消费 GravitationalLens（中子弹）与 ShockwaveRing（两枚爆点） |
+| 贴图 | `Assets/ExtraTextures/{white,StarTexture}.png` —— 1×1 白像素（扭曲着色器铺满用）、326×326 星形遮罩（两枚爆点的贴图键） |
+| 音效 | `Sounds/Item/{Gun_AWP_Shoot,Pecharge}.ogg` + 本工程新写的 `Sounds/CalamityExpansionSounds.cs`（只带这两条；旧工程那张音效表有 40 多条，按"只带真消费的"逐批补） |
+
+第二批顺带新写 / 补齐的基础设施（不是搬来的）：
+
+- `Utilities/CEUtil_Laser.cs` —— **只带了 `CantUseHoldout`**（枪械持握弹幕的去留判据，原在旧工程 `Utilities/CDUtil_Laser.cs`）；
+  那支文件里的 `DrawAfterimagesCentered` 本工程已有等价物（`CEUtil.DrawAfterimages`），
+  `PreciseDistanceToTileCollisionHit` / `AnyProjectiles` 目前没有消费方。
+- `Common/CalamityExpansionConstant.cs` 新增 `ExtraTextures` 前缀。
+- `Common/Effects/EffectLoader.cs` 新增 `NeutronWarp` 句柄（本工程第二支着色器）。
+- 本地化：中子脉冲物品（名字 + 四行 tooltip）与五枚弹幕的显示名，中英都补。
+
 ## 4. 命名口径与裁剪（重要，别当成漏做）
 
 - **改名口径（用户 2026-10-15 定）**：工程名叫 `CalamityExpansion`，所以
   **CD 前缀 → CE、CWR 一系的移植件前缀 → CE**。已执行的：
   `CDUtil` → `CEUtil`（文件 `CDUtil_Swing.cs` → `CEUtil_Swing.cs`）、`BaseHeldProjCO` → `BaseHeldProjCE`、
   `EXNeutronExplode` → `CENeutronExplode`（`EX` 是大修那套前缀），
-  `VoidErosion` → `NeutronEntropy`（显示名「中子熵变」）、`BlackMatterStick` → `NeutronBar`（显示名「中子锭」/ en `Neutron Bar`）。
+  `VoidErosion` → `NeutronEntropy`（显示名「中子熵变」）、`BlackMatterStick` → `NeutronBar`（显示名「中子锭」/ en `Neutron Bar`）；
+  第二批又落了两个：`BaseGunHoldoutCO` → `BaseGunHoldoutCE`、`EXNeutronExplosionRanged` → `CENeutronExplosionRanged`。
   **例外（用户明确）**：`DRK` 一系的粒子名（`DRKLoader` / `DRK_Spark` / `DRK_HeavenfallStar`）不用管，保持原样。
   **译名口径（用户 2026-10-15）**：「中子长戟」是**大修（CWR）的译名**，本工程一律不用——
   中英显示名统一为中英对齐的**「中子之刃」/ `Neutron Blade`**：
@@ -89,8 +113,10 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
   本工程按现状放在 `Systems/Graphic/IDrawWarp.cs`，故三枚实现它的弹幕显式 `using CalamityExpansion.Systems.Graphic;`。
 - **`EffectsSystem` 整支搬入**（扭曲桶 + 蓝移/无蓝移两路 + 透明滤镜技巧）；`FlashEffectStrength`（闪白）与
   `ScreenShakeAmp`（屏幕震动）本工程没有产出方，与旧工程一致只保留字段与每帧衰减。
-- **`EffectLoader` 只留 `WarpShader`**：旧工程另外四支（KnifeRendering / KnifeDistortion / Metaball ×2）属于别的 CWR/CE 内容，
-  没随行；**留着不删会在加载期抛 `MissingResourceException` 并禁用整个模组**（本次就是被 `CheckResources.ps1` 抓出来的）。
+- **`EffectLoader` 现在两支**：`WarpShader`（把位移场合成为屏幕扭曲）与第二批带进来的 `NeutronWarp`
+  （程序化生成位移场，由 `NeutronWarpHelper` 驱动）。旧工程另外四支（KnifeRendering / KnifeDistortion / Metaball ×2）
+  属于别的 CWR/CE 内容，没随行；**留着不删会在加载期抛 `MissingResourceException` 并禁用整个模组**
+  （第一批就是被 `CheckResources.ps1` 抓出来的）。两支 .fx 都由同名 .fxc 背书，取的是旧仓库里已提交的那份。
 - **`DRKLoader` 只注册两枚粒子**（DRK_Spark / DRK_HeavenfallStar）：其余五枚属于别的内容，没搬。
 - **`CEUtil_Swing` 去掉了 `player.CD()` / `projectile.CD()` 两个扩展**（那需要本工程的 ModPlayer / GlobalProjectile 数据类，中子之刃用不到）。
 - **`WeaponUtil` / `ProjUtil` 保留完整**（`ExoDebuffs`、`ProjectileRain` 等通用工具没删，本工程后续移植会用到）。
@@ -155,6 +181,35 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
   - 中子锭本体：堆叠 99、**中子稀有度**（黑 ↔ 浅黑脉动，用户 2026-10-15 定"中子系全部改掉"，原为原版青柠）、
     售价 1 铂；英文名按用户 2026-10-15 要求由 `Black Matter Stick` 修正为 `Neutron Bar`。
 
+### 5.2 中子脉冲（NeutronGun，第二批）
+
+- **中子脉冲**：稀有度 = 中子系共用的 `NeutronRarity`；伤害**基础 580 / 膨胀档 2900**
+  （580 是 CWR 源值；2900 是按中子之刃同倍率 ×5 推的，**待用户复核**）。实现照工程既有口径——
+  `Item.damage = 580` + `InflatedDamage = 2900f` + `BaseDamage` + `ModifyWeaponDamage`（每帧读开关，切换即时生效）。
+  其余：远程、射速 5 帧、击退 1.5、暴击 +2、消耗子弹类弹药、`channel` + `noUseGraphic` + `useStyle = Shoot`、
+  价值 13 铂 83 金 5 银、`shoot = NeutronGunHoldout`、初速 12。
+- **持握弹幕 `NeutronGunHoldout`**（108×56，贴图 7 帧）：左右键共用同一条弹幕，物品只负责把它拿出来。
+  去留判据是「玩家已无法持械 / 手里不是中子脉冲 / 两个鼠标键都松开」三者任一，**过载回落期间例外**
+  （否则充能条会随枪一起断掉；CWR main 版为此专门加了 StayAlive）。
+  左键速射：射速 4 帧、**每第 3 发放慢到 12 帧**，每发消耗一发弹药射出一颗中子弹；
+  右键重击：射速 45 帧、伤害 **×5.6**，每发 +10 蓄力，满 80 那发在**鼠标位置**炸出 `CENeutronExplosionRanged`
+  并把后续伤害抬到 **×15.6**，其后充能逐帧回落、归零时解除过载（两个倍率取 CWR main 版口径，旧版是 2.6 / 5.6）。
+  右键姿态把手持物前伸距离从 35 涨到 65 像素并换成 `NeutronGun2` 贴图；
+  头顶充能条直接复用 `NeutronGlaiveHeld.DrawBar`（两者上限同为 80）。
+- **中子弹 `NeutronBullet`**（32×256 等离子长矛、14×14 判定、MaxUpdates 6、存活 160 帧、无限穿透、
+  同敌人只结算一次）：飞行时走 `IDrawWarp` 的**引力透镜**（80×80 场、强度 0.3、进度恒 1、UV 半径 0.4）；
+  命中原地炸小爆点 `NeutronExplosionRanged`，并从目标四周朝内落 3 道 `NeutronLaser`
+  （出生点 = 圆心 + 随机单位方向 ×16~17 ×10 倍、速度取反即朝内飞）。
+  注：生成时传的 `ai[0]`（0 普通 / 1 蓄力）在现版**没有分支**——中子弹每发命中都落光束。
+- **中子光束 `NeutronLaser`**：5×5 判定、不绘制（贴图走 `InvisibleProj` 占位），视觉全靠每帧一颗蓝紫 `DRK_Spark`；
+  80 点护甲穿透、命中把该敌人的受击无敌帧清零（所以能连续多段命中）。
+- **两枚爆点**：小爆点 `NeutronExplosionRanged`（100×100、20 帧、同敌人 6 帧冷却）与大爆点
+  `CENeutronExplosionRanged`（200×200、30 帧、80 点护甲穿透）都不绘制本体，只往扭曲管线里画
+  **冲击波环**（300×300 / 强度 ×0.65 与 500×500 / ×0.8、大爆点 UV 半径 0.48）。
+- **配方**：中子锭 ×12 @ 德雷顿熔炉，现代/经典各一条（与中子之刃同档，走 `TryGetMod` 软引用）。
+- **音效**：开火 `Gun_AWP_Shoot`（左右键音高音量不同）、充能满 `Pecharge`，两条都来自 CWR，落在本工程新建的
+  `Sounds/CalamityExpansionSounds.cs` 里。
+
 ## 6. 工作流
 
 - 编译：`dotnet build -v q -nologo`。**C# 编译本身应为 0 警告 0 错误**（工程警告基线是 0）。
@@ -186,19 +241,29 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
   **配置项的键**在 `Configs` 段下：`Configs.ConfigSystem.DisplayName` 是配置界面标题，
   每个选项一组 `Configs.ConfigSystem.<选项名>.Label` / `.Tooltip`（本工程现有 `PerformanceMode` 与 `StatInflation` 两项，
   中英都要填）。忘补时 `dotnet build` 只会自动追加英文默认值，中文那边追加的是 `//` 注释占位。
-- git：**本工程尚未初始化仓库**（没有 `.git`，也没有远端）。要提交/推送得先 `git init` 并建远端，
-  且 git 的写操作在沙箱内会报 `index.lock: Permission denied`，必须提权执行。
+- git：仓库已初始化，远端 `origin = https://github.com/LiFeiAbom/CalamityExpansion`，`master` 跟踪 `origin/master`；
+  两批内容都是按 `git add -A` → `git commit` → `git push origin master` 落地的。
+  ⚠️ git 的写操作在沙箱内会报 `index.lock: Permission denied`，必须提权执行。
 
 ## 7. 未移植 / 待办
 
-- **待用户复核的两处**：① 上述经典配方的量级——中子之刃要 12 个中子锭，等于一把中子之刃要吃
+- **待用户复核（第一批遗留）**：① 中子锭经典配方的量级——中子之刃要 12 个中子锭，等于一把中子之刃要吃
   12×(七味) + 魔影锭×12（例：金源矿 300）；② 现代分支仍是 `ShadowspecBar`×1 + `MiracleMatter`×1，
   是否也要按经典版那样加码 / 对称。
-- **未移植的同系件**：中子脉冲（`NeutronGun`，旧工程里叫「恒星猎手」，在 CalamityDemutation 侧另有 CWR main 重植版）、
-  洛希之弦 / 中子长弓（`NeutronBow`）、中子系用到的 `NeutronWarp.fx` 着色器与其 helper。
-  中子锭的旧注释里还写着这三件的用量，搬的时候一起处理。
+- **待用户复核（第二批，用户尚未点名）**：
+  ① 中子脉冲的膨胀档——按中子之刃同倍率 ×5 暂取 **580 → 2900**，改 `NeutronGun.InflatedDamage` 一处即可；
+  ② 面板源值 580、右键两个倍率 5.6 / 15.6（CWR main 版口径）是否照收；
+  ③ 配方沿用「中子锭 ×12 @ 德雷顿熔炉」（与中子之刃同档）；
+  ④ tooltip 我按现实现改了两处措辞——CWR 原文的"右键切换为狙击形态"（本移植里没有模式开关，只有射速与伤害变化）
+  与"伽马射线"只挂在蓄力弹上的说法（中子弹其实**每发**命中都落 3 道光束）。要原味文案的话，
+  旧工程 `19ad483^` 的 en-US / zh-Hans hjson 里有原文可对照。
+- **未移植的同系件**：洛希之弦 / 中子长弓（`NeutronBow` 整链，含 `NeutronArrow` 与它自己的爆点）、
+  中子脉冲链里 CWR 的 120 发弹匣与装填系统（`BaseFeederGun`，要连按键与配置系统一起搬，本批刻意跳过）。
+  中子锭的旧注释里还写着这几件的用量，搬的时候一起处理。
 - **中子链未进游戏实测**（本机沙箱出不了 .tmod）：待实测项 = 中子之刃面板与手感、右键蓄力条位置、
-  三枚 IDrawWarp 弹幕的扭曲表现、中子熵变的每秒 7500 掉血与染色。
+  三枚 IDrawWarp 弹幕的扭曲表现、中子熵变的每秒 7500 掉血与染色；第二批再加：持枪位置与 7 帧动画、
+  右键前伸与 `NeutronGun2` 贴图切换、中子弹的引力透镜与两枚爆点的冲击波环
+  （**这两样是本工程第一次真跑 `NeutronWarp` 着色器**）。
 - **文案待用户点名的两处**：中子锭的 tooltip（`万物之重，聚合指尖` / `The weight of all things, gathered at your fingertips`）
   是旧工程带来的 CWR 原味文案；中子熵变的描述被我按新名改成「熵变正在吞噬你」/ `Entropy is eating you away`（原文是"虚无正在吞噬你"）。
 - **图标**（`icon*.png`）仍是 tModLoader 模板图。

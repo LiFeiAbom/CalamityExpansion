@@ -4,7 +4,8 @@
 New content for Calamity — expanding what the mod has to offer.
 
 一个灾厄扩展模组（tModLoader 1.4.4 / net8.0）：本工程做的是**往灾厄里加新东西**，不是旧版内容的回归。
-首批内容是「中子」链 —— 中子之刃（Neutron Blade）与它的材料、弹幕、减益与专属稀有度。
+目前的内容是「中子」链的两批 —— 近战的中子之刃（Neutron Blade）与远程的中子脉冲（Neutron Pulse），
+以及它们的材料、弹幕、减益与专属稀有度。
 软依赖 `CalamityMod` 与 `CalamityModClassicPreTrailer`（见 `build.txt` 的 `weakReferences`）；代码里一律用
 `ModLoader.TryGetMod` / `TryFind<ModItem|ModTile|ModBuff>` 按名字取内容，不写死类型引用，
 两版灾厄各自注册一条配方、名字对不上时那条分支静默不注册。
@@ -22,10 +23,15 @@ New content for Calamity — expanding what the mod has to offer.
 
 - **中子之刃 Neutron Blade**（`NeutronGlaive`）—— 月后近战巨剑；左键挥出中子之刃光束，右键蓄力喷追踪中子球、
   充满松手引爆中子大爆点（伤害为面板 ×10）。面板基础 855，配置「数值膨胀」开启后 4275。
+- **中子脉冲 Neutron Pulse**（`NeutronGun`）—— 月后远程枪械；左键速射中子弹，命中生成中子星翘曲点并从四周落下
+  3 道中子光束，右键改为重击（射速 45 帧、伤害 ×5.6）并给枪械充能，充满后在鼠标处引爆远程版中子大爆点
+  （其后一发伤害 ×15.6）。面板基础 580，配置「数值膨胀」开启后 2900。
 - **中子锭 Neutron Bar**（`NeutronBar`）—— 中子之刃的合成材料（×12）。
   现代版灾厄配方 = 魔影锭 + 奇迹物质 @ 嘉登熔炉；经典版灾厄配方 = 七味经典材料 + 魔影锭 @ 嘉登熔炉。
 - **中子熵变 Neutron Entropy**（`NeutronEntropy`）—— 弹幕命中附加的减益，每秒 7500 掉血、持续 20 秒，附带染色与星屑。
 - **中子稀有度 NeutronRarity** —— 中子系列的专属档位，颜色在纯黑与浅黑之间反复渐变。
+- **中子星扭曲管线** —— 第二批把 CWR 的 `NeutronWarp.fx` 与它的 helper 一起带了进来：中子弹飞行时走「引力透镜」，
+  两种爆点走「冲击波环」，取代旧版把遮罩贴图叠几十层的 CPU 写法。
 
 ## 开发
 

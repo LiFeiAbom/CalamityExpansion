@@ -5,8 +5,10 @@ namespace CalamityExpansion.Common.Effects
 {
     /// <summary>
     /// 着色器加载器：请求并托管本模组的 .fx 资源。
-    /// 本工程目前只带进来一支——EffectsSystem 合成 IDrawWarp 弹幕时用的屏幕扭曲 WarpShader；
-    /// 旧工程里的刀光 / 变形球 / 深渊裂隙等着色器属于别的 CWR/CE 内容，未随本次移植。
+    /// 本工程目前带进来两支——EffectsSystem 合成 IDrawWarp 弹幕时用的屏幕扭曲
+    /// <see cref="WarpShader"/>，与中子脉冲链带来的中子星扭曲 <see cref="NeutronWarp"/>
+    /// （前者负责"把位移场应用成屏幕扭曲"，后者负责"程序化生成位移场"）；
+    /// 旧工程里的刀光 / 变形球 / 深渊裂隙等着色器属于别的 CWR/CE 内容，未随移植。
     /// </summary>
     /// <remarks>
     /// ⚠️ 本工程的 .fx 不是由 tModLoader 在构建时编译的：每新增一个 .fx，都必须先用 tModLoader 自带的 fxc
@@ -22,6 +24,12 @@ namespace CalamityExpansion.Common.Effects
         /// </summary>
         public static Asset<Effect> WarpShader;
         /// <summary>
+        /// 中子星扭曲着色器（移植自 CWR 的 NeutronWarp）：由 NeutronWarpHelper 在
+        /// <c>IDrawWarp.Warp()</c> 里按技法（GravitationalLens / ShockwaveRing 等）程序化生成位移场，
+        /// 取代旧版"CPU 侧叠几十层遮罩贴图"的写法
+        /// </summary>
+        public static Asset<Effect> NeutronWarp;
+        /// <summary>
         /// 请求加载全部 .fx 着色器资源（异步）：路径前缀取 CalamityExpansionConstant.noEffects（"Effects/"）。
         /// 只持有 Asset 句柄，不在此处取 .Value，真正取值推迟到绘制期
         /// </summary>
@@ -32,6 +40,8 @@ namespace CalamityExpansion.Common.Effects
             // ⚠️ Effects/WarpShader.fx 由 Effects/WarpShader.fxc 背书（.fxc 不由构建自动生成，需手动编译并随工程提交）
             var assets = CalamityExpansion.Instance.Assets;
             WarpShader = assets.Request<Effect>(CalamityExpansionConstant.noEffects + "WarpShader");
+            // ⚠️ 同样需要 Effects/NeutronWarp.fxc 背书（随工程提交的预编译产物，构建不会自动生成）
+            NeutronWarp = assets.Request<Effect>(CalamityExpansionConstant.noEffects + "NeutronWarp");
         }
         /// <summary>
         /// 卸载时把所有着色器 Asset 引用置空，便于热重载回收（注意方法名按既有约定写作 UnLoad）
@@ -39,6 +49,7 @@ namespace CalamityExpansion.Common.Effects
         public static void UnLoad()
         {
             WarpShader = null;
+            NeutronWarp = null;
         }
     }
 }

@@ -24,15 +24,31 @@ Items: {
 			Releasing early causes the energy to spill out
 			'''
 	}
+
+	NeutronGun: {
+		DisplayName: Neutron Pulse
+		Tooltip:
+			'''
+			Fires gravity projectiles that create neutron star warp points and rain gamma rays down upon impact
+			Right-click to switch to heavy mode: it fires much more slowly, but each shot hits far harder
+			Each shot charges the gun, and when fully charged, the next shot triggers a neutron star explosion at the cursor
+			"Shoot the sun down!"
+			'''
+	}
 }
 
 Rarities.NeutronRarity.DisplayName: Neutron
 
 Projectiles: {
 	CENeutronExplode.DisplayName: Neutron Explosion
+	CENeutronExplosionRanged.DisplayName: Neutron Explosion
+	NeutronBullet.DisplayName: Neutron Bullet
 	NeutronExplode.DisplayName: Neutron Explode
+	NeutronExplosionRanged.DisplayName: Neutron Explosion
+	NeutronGunHoldout.DisplayName: Neutron Pulse
 	NeutronGlaiveBeam.DisplayName: Neutron Blade Beam
 	NeutronGlaiveHeld.DisplayName: Neutron Blade
+	NeutronLaser.DisplayName: Neutron Laser
 	NeutronsOrb.DisplayName: Neutron Orb
 }
 
@@ -57,6 +73,7 @@ Configs: {
 				'''
 				Raises this mod's ported weapons to the inflated tier named by the author.
 				Neutron Blade: damage goes from 855 to 4275 while enabled (the right-click explosion is spawned at x10 of the panel, so it scales along).
+				Neutron Pulse: damage goes from 580 to 2900 while enabled (the bullets and the right-click explosion are both derived from the panel, so they scale along).
 				Independent from the other switches; toggling takes effect immediately in-game, no reload needed.
 				Default: Off.
 				'''
