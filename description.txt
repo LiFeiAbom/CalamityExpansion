@@ -1,0 +1,3 @@
+灾厄扩展（CalamityExpansion，tModLoader 1.4.4 / net8.0）—— 为灾厄新增内容。
+第一批：中子之刃（Neutron Blade）与其链条 —— 中子锭、中子之刃光束、中子爆点、中子大爆点。
+软依赖 CalamityMod 与 CalamityModClassicPreTrailer（材料与站台按版本软引用，未安装时不注册对应配方）。

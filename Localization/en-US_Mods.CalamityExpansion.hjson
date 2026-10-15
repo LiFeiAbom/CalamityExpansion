@@ -1,0 +1,65 @@
+# This file will automatically update with entries for new content after a build and reload.
+# Please read https://github.com/tModLoader/tModLoader/wiki/Localization to learn more about localization and these files.
+
+Buffs: {
+	NeutronEntropy: {
+		DisplayName: Neutron Entropy
+		Description: Entropy is eating you away
+	}
+}
+
+Items: {
+	NeutronBar: {
+		DisplayName: Neutron Bar
+		Tooltip: The weight of all things, gathered at your fingertips
+	}
+
+	NeutronGlaive: {
+		DisplayName: Neutron Blade
+		Tooltip:
+			'''
+			Swinging releases powerful gravitational sword waves
+			Waves causing a neutron star explosion upon hitting a target
+			Right-click to charge the blade, releasing a large neutron star explosion when fully charged
+			Releasing early causes the energy to spill out
+			'''
+	}
+}
+
+Rarities.NeutronRarity.DisplayName: Neutron
+
+Projectiles: {
+	CENeutronExplode.DisplayName: Neutron Explosion
+	NeutronExplode.DisplayName: Neutron Explode
+	NeutronGlaiveBeam.DisplayName: Neutron Blade Beam
+	NeutronGlaiveHeld.DisplayName: Neutron Blade
+	NeutronsOrb.DisplayName: Neutron Orb
+}
+
+Configs: {
+	ConfigSystem: {
+		DisplayName: Calamity Expansion Config
+
+		PerformanceMode: {
+			Label: Performance Mode
+			Tooltip:
+				'''
+				Stops drawing afterimage trails for this mod's projectiles to reduce rendering load.
+				Nothing in the current neutron chain (Neutron Blade and its projectiles) uses afterimage trails yet,
+				so this switch is reserved for content ported in later batches.
+				Default: Off.
+				'''
+		}
+
+		StatInflation: {
+			Label: Stat Inflation
+			Tooltip:
+				'''
+				Raises this mod's ported weapons to the inflated tier named by the author.
+				Neutron Blade: damage goes from 855 to 4275 while enabled (the right-click explosion is spawned at x10 of the panel, so it scales along).
+				Independent from the other switches; toggling takes effect immediately in-game, no reload needed.
+				Default: Off.
+				'''
+		}
+	}
+}

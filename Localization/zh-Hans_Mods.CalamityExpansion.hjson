@@ -1,0 +1,64 @@
+# This file will automatically update with entries for new content after a build and reload.
+# Please read https://github.com/tModLoader/tModLoader/wiki/Localization to learn more about localization and these files.
+
+Buffs: {
+	NeutronEntropy: {
+		DisplayName: 中子熵变
+		Description: 熵变正在吞噬你
+	}
+}
+
+Items: {
+	NeutronBar: {
+		DisplayName: 中子锭
+		Tooltip: 万物之重，聚合指尖
+	}
+
+	NeutronGlaive: {
+		DisplayName: 中子之刃
+		Tooltip:
+			'''
+			挥砍时释放强力的引力剑波
+			剑波命中目标时引发中子星爆炸
+			右键可为刀刃充能，充满时释放大规模中子星爆炸
+			提前松手会导致能量外溢
+			'''
+	}
+}
+
+Rarities.NeutronRarity.DisplayName: 中子
+
+Projectiles: {
+	CENeutronExplode.DisplayName: 中子大爆点
+	NeutronExplode.DisplayName: 中子爆点
+	NeutronGlaiveBeam.DisplayName: 中子之刃光束
+	NeutronGlaiveHeld.DisplayName: 中子之刃
+	NeutronsOrb.DisplayName: 中子球
+}
+
+Configs: {
+	ConfigSystem: {
+		DisplayName: 灾厄扩展配置
+
+		PerformanceMode: {
+			Label: 性能模式
+			Tooltip:
+				'''
+				关闭本模组弹幕的残影拖尾绘制，以降低渲染负担。
+				当前中子链（中子之刃及其整条弹幕）尚未使用残影拖尾，本项为后续批次移植的内容预留。
+				默认：关闭。
+				'''
+		}
+
+		StatInflation: {
+			Label: 数值膨胀
+			Tooltip:
+				'''
+				把本模组已接入武器的数值回调到作者点名的膨胀档。
+				中子之刃：开启后面板伤害由 855 抬到 4275（右键大爆点按面板 ×10 生成，会跟着一起抬高）。
+				与其它开关互不影响，游戏内切换即时生效、不需要重载。
+				默认：关闭。
+				'''
+		}
+	}
+}

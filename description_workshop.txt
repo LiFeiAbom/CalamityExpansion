@@ -1,0 +1,5 @@
+灾厄扩展（CalamityExpansion）—— 为灾厄新增内容。
+
+第一批：中子之刃（Neutron Blade）与其链条。
+
+软依赖：CalamityMod / CalamityModClassicPreTrailer（未安装时对应配方不注册）。

@@ -1,0 +1,4 @@
+﻿displayName = CalamityExpansion
+author = LF
+version = 0.1
+weakReferences = CalamityMod, CalamityModClassicPreTrailer
