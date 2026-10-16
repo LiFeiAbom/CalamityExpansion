@@ -10,6 +10,7 @@
 
 	<!-- References -->
 	<ItemGroup>
+	  <Folder Include="Content\Items\Accessories\JobAcc\Melee\" />
 	  <Folder Include="Content\Items\Weapons\Melee\" />
 	  <Folder Include="Content\Buffs\" />
 	  <Folder Include="Content\Projectiles\Melee\" />

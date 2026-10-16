@@ -2,13 +2,39 @@
 # Please read https://github.com/tModLoader/tModLoader/wiki/Localization to learn more about localization and these files.
 
 Buffs: {
+	DaybreakEX: {
+		DisplayName: 破晓EX
+		Description: 来自烈阳的光芒肆意灼烧
+	}
+
+	HellfireIV: {
+		DisplayName: 燃烧IV
+		Description: 每秒损失 900 生命；防御力降低 75；受到的伤害增加 15%
+	}
+
 	NeutronEntropy: {
 		DisplayName: 中子熵变
-		Description: 熵变正在吞噬你
+		Description: 中子共振的能量击碎现实
 	}
 }
 
 Items: {
+	FireGauntletEX: {
+		DisplayName: 烈火手套EX
+		Tooltip:
+			'''
+			+8 防御力
+			+22% 近战伤害
+			+22% 近战暴击率
+			+22% 近战攻击速度
+			+400 仇恨值
+			近战击退 ×2，近战武器大小 +20%
+			允许自动挥舞近战武器和鞭子
+			近战命中会造成燃烧IV
+			燃烧IV：每秒损失 900 生命、防御力降低 75、受到的伤害提高 15%
+			'''
+	}
+
 	NeutronBar: {
 		DisplayName: 中子锭
 		Tooltip: 万物之重，聚合指尖
@@ -35,9 +61,22 @@ Items: {
 			"把太阳射下来!"
 			'''
 	}
+
+	WarriorEmblemEX: {
+		DisplayName: 战士徽章EX
+		Tooltip:
+			'''
+			+18% 近战伤害
+			+18% 近战暴击率
+			+18% 近战攻击速度
+			近战命中会造成破晓EX（对敌怪与玩家都生效）
+			破晓EX：每秒损失 750 生命、防御力降低 50、受到的伤害提高 10%
+			'''
+	}
 }
 
 Rarities.NeutronRarity.DisplayName: 中子
+Rarities.WarriorEXRarity.DisplayName: 战士EX
 
 Projectiles: {
 	CENeutronExplode.DisplayName: 中子大爆点

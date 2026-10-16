@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria.ModLoader;
+using Terraria.Graphics.Shaders;
 namespace CalamityExpansion.Common.Effects
 {
     /// <summary>
@@ -8,6 +9,7 @@ namespace CalamityExpansion.Common.Effects
     /// 本工程目前带进来两支——EffectsSystem 合成 IDrawWarp 弹幕时用的屏幕扭曲
     /// <see cref="WarpShader"/>，与中子脉冲链带来的中子星扭曲 <see cref="NeutronWarp"/>
     /// （前者负责"把位移场应用成屏幕扭曲"，后者负责"程序化生成位移场"）；
+    /// 外加燃烧IV 的精灵溶解 <see cref="HellfireIV"/>（移植自灾厄现代版 Effects/MiracleBlight.fx，本工程改名并改为燃烧橙红）。
     /// 旧工程里的刀光 / 变形球 / 深渊裂隙等着色器属于别的 CWR/CE 内容，未随移植。
     /// </summary>
     /// <remarks>
@@ -30,6 +32,19 @@ namespace CalamityExpansion.Common.Effects
         /// </summary>
         public static Asset<Effect> NeutronWarp;
         /// <summary>
+        /// 燃烧IV 的精灵溶解着色器（移植自灾厄现代版 Effects/MiracleBlight.fx）：
+        /// 由 HellfireIV 减益在它的 DrawNPC 钩子里以 Misc 着色器身份使用，发光边颜色由调用方 UseColor 传燃烧橙红
+        /// </summary>
+        public static Asset<Effect> HellfireIV;
+        /// <summary>
+        /// 燃烧IV 溶解着色器在 <c>GameShaders.Misc</c> 里的键（配合 <see cref="HellfireIVShaderPass"/> 使用）
+        /// </summary>
+        public const string HellfireIVShaderKey = "CalamityExpansion:HellfireIV";
+        /// <summary>
+        /// 燃烧IV 溶解着色器的 pass 名（Effect/HellfireIV.fx 里那个 pass 的名字）
+        /// </summary>
+        public const string HellfireIVShaderPass = "HellfireIVPass";
+        /// <summary>
         /// 请求加载全部 .fx 着色器资源（异步）：路径前缀取 CalamityExpansionConstant.noEffects（"Effects/"）。
         /// 只持有 Asset 句柄，不在此处取 .Value，真正取值推迟到绘制期
         /// </summary>
@@ -42,6 +57,11 @@ namespace CalamityExpansion.Common.Effects
             WarpShader = assets.Request<Effect>(CalamityExpansionConstant.noEffects + "WarpShader");
             // ⚠️ 同样需要 Effects/NeutronWarp.fxc 背书（随工程提交的预编译产物，构建不会自动生成）
             NeutronWarp = assets.Request<Effect>(CalamityExpansionConstant.noEffects + "NeutronWarp");
+            // ⚠️ 同样需要 Effects/HellfireIV.fxc 背书；编译命令见本类 remarks
+            HellfireIV = assets.Request<Effect>(CalamityExpansionConstant.noEffects + "HellfireIV");
+            // 注册成 Misc 着色器（照灾厄把 MiracleBlight 注册进 GameShaders.Misc 的做法）：
+            // 由 HellfireIV 减益在绘制期取用——UseImage1 传噪声贴图、UseColor 传燃烧橙红、UseOpacity 传阈值基准
+            GameShaders.Misc[HellfireIVShaderKey] = new MiscShaderData(HellfireIV, HellfireIVShaderPass);
         }
         /// <summary>
         /// 卸载时把所有着色器 Asset 引用置空，便于热重载回收（注意方法名按既有约定写作 UnLoad）
@@ -50,6 +70,7 @@ namespace CalamityExpansion.Common.Effects
         {
             WarpShader = null;
             NeutronWarp = null;
+            HellfireIV = null;
         }
     }
 }

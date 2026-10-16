@@ -1,5 +1,22 @@
 # CalamityExpansion — 工程记忆（新会话先读这份）
 
+## 0. 交接摘要（2026-10-16 / 10-17 这两天的会话）
+
+- **做完的**（从上次提交 `bd73031` 之后累积的全部改动，本次一次性提交）：
+  ① 第三批：**战士徽章EX + 破晓EX**（§3.2 / §5.3）——含玩家侧效果、PvP 施加、多人口径、死亡爆尘与传染复刻；
+  ② 第二张染色：**烈火手套EX 贴图**（§3.3，两轮改口径后定稿）；
+  ③ 第四批：**烈火手套EX + 燃烧IV**（§3.4 / §5.4）——含 MiracleBlight 溶解视觉的全复刻（着色器 + 渲染基建）、配方、PvP 与多人适配；
+  ④ **战士EX 稀有度**（§5.3 / §5.4）：橙红渐变字色，两件战士饰品共用；
+  ⑤ 工具：`Tools/ReadVanillaIL.ps1`（用 Mono.Cecil 读 tModLoader.dll 查原版钩子/数值/IL，非 ASCII 注释必须配 BOM）。
+- **当前状态**：C# 编译 **0 警告 0 错误**；`CheckImplicitTextures.ps1` 16 个类全命中、`CheckResources.ps1` 27 条全命中；
+  `.tmod` 已打包进 `…\tModLoader\Mods\`。
+- **实测状态**：破晓EX 那一批用户进游戏测过、回「没有问题」；**烈火手套EX / 燃烧IV / 战士EX 档尚未进游戏实测**。
+- **待用户点名的小口径**：燃烧IV 的时长（现 300 帧）与英文名（现 `Hellfire IV`）、烈火手套EX 的价值（现 15 金）、
+  溶解强度（`HellfireIV.DissolveOpacity`，现 0.7）、战士EX 档的配色与速度（`WarriorEXRarity` 顶部两个旋钮）。
+- **继续开发时的检查顺序**：`dotnet build -v q -nologo`（沙箱内末尾打包会报 TML001，只看编译器那两行）
+  → `Tools/CheckImplicitTextures.ps1` → `Tools/CheckResources.ps1`；要拿到可进游戏的 `.tmod` 必须在**非沙箱 shell** 里跑构建。
+- **下一步最该做的**：进游戏实测第四批的溶解视觉（重点：批次接管与其它模组绘制钩子是否冲突），见 §7「第四批待实测/待定」。
+
 > 本文件是给后续会话/协作者的项目记忆：工程口径、本次移植的清单与裁剪、踩过的坑、当前状态。
 > 改动工程时请同步更新它。内容来源（旧工程）是 `..\CalamityDemutation`，它的 `AGENTS.md` 里有更完整的
 > 换算表、命名规则与灾厄源码侦察路线（本文件的很多口径都继承自那里）。
@@ -90,6 +107,92 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
 - `Common/CalamityExpansionConstant.cs` 新增 `ExtraTextures` 前缀。
 - `Common/Effects/EffectLoader.cs` 新增 `NeutronWarp` 句柄（本工程第二支着色器）。
 - 本地化：中子脉冲物品（名字 + 四行 tooltip）与五枚弹幕的显示名，中英都补。
+
+### 3.2 第三批（2026-10-16，战士徽章EX + 破晓EX）
+
+本批**不是从旧工程搬来的**，是用户给素材 + 口述规格、本工程新写的：
+
+| 类别 | 文件 |
+|---|---|
+| 饰品 | `Content/Items/Accessories/JobAcc/Melee/WarriorEmblemEX.cs` + `.png`（显示名「战士徽章EX」/ en `Warrior Emblem EX`） |
+| 减益 | `Content/Buffs/NegativeBuffs/DaybreakEX.cs` + `.png`（显示名「破晓EX」/ en `Daybreak EX`） |
+| ModPlayer | `Players/CalamityExpansionPlayer.cs`（**本工程第一个 ModPlayer**：破晓EX 的施加（敌怪路）与玩家侧结算） |
+| 全局物品 | `Content/Items/CalamityExpansionGlobalItem.cs`（破晓EX 的 PvP 施加·物品路；**无实例字段**，故不需要 InstancePerEntity） |
+| 侦察工具 | `Tools/ReadVanillaIL.ps1`（Mono.Cecil 读 tModLoader.dll，dump 原版方法 IL / 列 API 成员；本批的原版破晓口径就是靠它实查的） |
+
+- **贴图口径**：`WarriorEmblemEX.png`（28×28）是原版战士徽章的染色版。用户给的参考 `Warrior_Emblem.webp` 28×28
+  与 `Solar_Flare_Breastplate.webp` 38×28 都是**精确 2× 放大图**（14×14 / 19×14 的像素块翻倍）；
+  本工程既有素材 `BeetleGlove.png` 26×30 也是同一口径（13×15 翻倍），故本批照用户素材同口径出图：
+  **不缩放、只逐像素换色**，成品 28×28。
+- **染色映射**（色板取自日曜胸甲）：银环白 `223,223,223`→`249,75,7`、环中间调 `161,161,161`→`200,44,18`、
+  剑身高光 `255,249,209`→`253,169,49`、剑身黄 `236,214,51`→`254,158,35`、金 `231,153,28`→`246,131,14`、
+  `224,139,15`→`249,75,7`、暗金 `175,106,17`→`200,44,18`、暗棕 `96,57,9`→`102,34,34`、
+  最深棕 `51,33,5`→`76,26,26`（胸甲深栗再压暗一档，保住剑身最深轮廓）。
+  **四个中性色原样保留**（`32,32,32` / `64,64,64` / `84,84,84` / 透明）——于是仍是「深灰圆盘 + 橙红环 + 橙色剑」的层次。
+  临时产出的 `WarriorEmblem.png`（同一张图、旧名）已随本批删除，工程里只留 `WarriorEmblemEX.png`。
+- **破晓EX 图标**：用户给的 `Daybroken.png`（32×32 = 16×16 的 2× 放大，正好是 buff 贴图标准尺寸）原样入库为
+  `Content/Buffs/NegativeBuffs/DaybreakEX.png`；工程根目录那份参考图**没删**（用户没点名，留作备查）。
+- **EX 徽章改风格（2026-10-17，用户两次纠正后定稿）**：最终口径 =「**原先的灰色部分不染色；已经染过的那些
+  （外圈白环 + 中心金剑）改成手套底座那种渲染**」。做法：暗盘 3 个灰阶 `(32,32,32)/(64,64,64)/(84,84,84)`
+  原样保留，其余不透明像素按感知亮度 L（`0.299R+0.587G+0.114B`）映射到手套那套暖色阶
+  （`106,10,4 → 245,30,18 → 255,127,39 → 255,169,74 → 255,207,106 → 255,247,83`，L 区间拉伸到全档）：
+  `(76,26,26)→(106,10,4)`、`(102,34,34)→(173,20,11)`、`(200,44,18)→(252,95,32)`、`(249,75,7)→(255,161,67)`、
+  `(246,131,14)→(255,206,105)`、`(254,158,35)→(255,236,89)`、`(253,169,49)→(255,247,83)`。
+  ⚠️ 走的弯路：先误把「暗盘（灰）」当成底座染了暖色，方向正好反了，用户当天纠正为「灰的不动、染过的那些学这个风格」。
+  ⚠️ 用户原给的 `Warrior_Emblem.webp` 已从工程根目录和回收站都找不到；本次是从中间产物
+  `%TEMP%\ce_emblem_work\WarriorEmblemEX_solar.png` 反推的（太阳色版，映射时有两档与原剑色重合，不影响成品）。
+
+### 3.3 第二张染色（2026-10-16，烈火手套EX 的贴图）
+
+- **对象**：`Content/Items/Accessories/JobAcc/Melee/FireGauntletEX.png`（26×30 = 13×15 的 **2×**，与
+  `BeetleGlove.png` / `WarriorEmblemEX.png` 同口径）。用户口径：「不修改任何样式，全部涂改成日曜那种烈红色」——
+  即**不重绘、不改尺寸**，把整张图（含灰色金属件）统一进一个红色系。
+  ⚠️ 中途改过口径：先按「日曜那种烈红」染了一版（色阶 `76,26,26 → 255,114,87`），用户 2026-10-16 看过之后说
+  日曜红不如**原图那个烈火红**好看，于是以原图自带的 `(245,30,18)`（色相 3.2°、饱和 0.93）为准重染；
+  重染一律从**原件**重新算，不在上一版上叠色。
+  **最终口径（用户 2026-10-17 澄清后确定）**：「1 里手指那些个颜色不动，底座的灰色染成手指那种风格」——
+  即手指/火焰部分**一个像素都不改**，只把底座的 5 个灰阶按「手指自带的暖色阶」重映射（把灰阶范围拉伸到暖色阶全档）：
+  `(50,50,50)→(106,10,4)`、`(68,69,64)→(220,26,15)`、`(100,101,94)→(255,135,46)`、
+  `(136,137,127)→(255,197,98)`、`(163,166,155)→(255,247,83)`（暖色阶取自手指本身：
+  暗红 → 红 → 橙 → 亮橙 → 更亮橙 → 黄）。
+  中途误做过「整只纯色 `(245,30,18)`」一版，用户同一天澄清后作废（那版留档见下）。
+- **做法**（可复用）：每个非透明像素取 `t = (V + 感知亮度L) / 2`（V = 通道最大值，L = 0.299R+0.587G+0.114B），
+  再走五档**烈火红阶**插值（中间版本，已备份）：`0.00 (51,4,3)` → `0.35 (115,10,6)` → `0.70 (245,30,18)`
+  → `0.88 (255,80,50)` → `1.00 (255,115,95)`（整条色阶锁在原图烈火红的色相上）；alpha 原样保留。
+  换色系时只改这五个色阶即可，混合口径不用动。
+- ⚠️ **踩过的坑**：① 只用亮度 L 会把饱和红压暗（(245,30,18) 的 L 只有 0.29），火焰比灰件还暗；
+  ② 只用 V 会把四档亮焰色（V 全是 1.0）并成同一个颜色，层次全丢；③ 纯色相锁定（保 S/V、只换 H）
+  会把灰色件（S=0）留在灰——因为用户要「全部」变红，必须抬饱和度。故最终取 (V+L)/2。
+  ④ 用 PIL 覆盖同一个文件时，若还留着 `Image.open` 的句柄（懒加载不会自动关），`save` 会抛
+  `OSError: [Errno 22] Invalid argument`——先把参照图 `load()`+`copy()` 再写。
+- **现状**：贴图最终版 = **手指原样 + 底座暖色化**（就地覆盖，10 种颜色：原 12 色里有两档映射后与手指色重合）。
+  三个版本都在 `%TEMP%\ce_gauntlet_work\`：`FireGauntletEX_original.png`（原件）、
+  `FireGauntletEX_shaded_red.png`（整只渐变烈火红的中间版）、`FireGauntletEX_flat_red.png`（整只纯色，已作废）、
+  `compare_base.png`（本轮三联对比）。临时目录可能被系统清理，要长期留档得说一声搬进工程。
+  该贴图目前**没有对应 .cs**，与（已被用户删掉的）`BeetleGlove.png` 同为待规格的 WIP 素材。
+
+### 3.4 第四批（2026-10-17，烈火手套EX + 燃烧IV）
+
+同第三批：**不是从旧工程搬来的**，是用户给素材 + 口述规格、本工程新写的。
+
+| 类别 | 文件 |
+|---|---|
+| 饰品 | `Content/Items/Accessories/JobAcc/Melee/FireGauntletEX.cs` + `.png`（显示名「烈火手套EX」/ en `Fire Gauntlet EX`） |
+| 减益 | `Content/Buffs/NegativeBuffs/HellfireIV.cs` + `.png`（显示名「燃烧IV」/ en `Hellfire IV`；图标取灾厄仓库里那份原版 Hellfire 图标） |
+| 着色器 | `Effects/HellfireIV.fx` + `.fxc`（移植自灾厄现代版 `Effects/MiracleBlight.fx`，改名并改为燃烧橙红） |
+| 贴图 | `Assets/ExtraTextures/Neurons.png`（溶解噪声贴图，自灾厄 `ExtraTextures/GreyscaleGradients/Neurons` 取来，512×512） |
+| 渲染基建 | `Common/Graphics/Buffers/{RenderTargetPool, ScreenspaceTargetPool, RenderTargetScope, RenderTargetPreserver}.cs`（自姊妹工程 `Graphics/Buffers/` 原样搬来，只改命名空间）+ `Common/Graphics/SpriteBatchScope.cs`（本工程新写） |
+| 稀有度 | `Content/Rarities/WarriorEXRarity.cs`（战士EX 档：名字字色**橙红渐变**，战士徽章EX 与烈火手套EX 共用；见 §5.3/§5.4） |
+
+- **着色器口径**：新增 .fx 必须现场编译出同名 .fxc（`..\..\FXC\fxc.exe /nologo /T fx_2_0 /Fo 名字.fxc 名字.fx`，
+  会刷一条 X4717 属正常），否则运行期 `Assets.Request<Effect>` 抛异常、整个模组被禁用 —— 命令原文也写在 `EffectLoader` 的 remarks 里。
+  发光边颜色**不再硬编码**（原版是荧光绿 `0.4902,1,0`），改为读 `uColor`，由调用方 `UseColor(燃烧橙红)` 传入，
+  换风格不用重编译；pass 名 `HellfireIVPass` 必须与 `EffectLoader.HellfireIVShaderPass` 一致（MiscShaderData 按 pass 名取）。
+- **染色（用户 2026-10-17 两轮改口径后定稿）**：手指/火焰部分**原样不动**，底座灰件按手指那套暖色阶渲染
+  （映射见 §3.3 那条同款做法：`(50,50,50)→(106,10,4)`…）。临时对比图见 `%TEMP%\ce_gauntlet_work\`。
+
+⚠️ 补一条：§4 末尾那句「本工程自此**没有 GlobalItem**」在 2026-10-16 之后**不再成立**——本批为破晓EX 的
+PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字段**，与旧那套稀有度体系无关，别混为一谈）。
 
 ## 4. 命名口径与裁剪（重要，别当成漏做）
 
@@ -210,6 +313,94 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
 - **音效**：开火 `Gun_AWP_Shoot`（左右键音高音量不同）、充能满 `Pecharge`，两条都来自 CWR，落在本工程新建的
   `Sounds/CalamityExpansionSounds.cs` 里。
 
+### 5.3 战士徽章EX（WarriorEmblemEX）与破晓EX（DaybreakEX，2026-10-16 第三批）
+
+- **战士徽章EX**：近战饰品（JobAcc/Melee）。属性（用户 2026-10-16 口述）：**+18% 近战伤害 / +18% 近战暴击率 /
+  +18% 近战攻击速度**；近战命中——**物品挥砍与近战弹幕两条路都算**——附加破晓EX。命中判定写在
+  `CalamityExpansionPlayer.OnHitNPCWithItem` / `OnHitNPCWithProj`，按 `hit.DamageType.CountsAsClass(DamageClass.Melee)` 过滤，
+  远程/魔法/召唤/无职业一律不加。附加时长照**原版破晓武器**的 5 秒（300 帧；用户未点名时长，这条是我照原版补的）。
+  稀有度：**2026-10-17 起改为本工程自带的 `Warrior EXRarity`**（`Content/Rarities/WarriorEXRarity.cs`，
+  与烈火手套EX 共用）——用户当天指定「名字字样要显示橙红渐变」，于是从原版红档（`ItemRarityID.Red`）
+  换成这支自定义档：四档橙红循环流动（暗红 `200,44,18` → 烈火红 `245,30,18` → 橙红 `255,96,16` → 亮橙 `255,160,50`，
+  全部取自这两件饰品的贴图配色），写法与中子档同源（每帧读 `GlobalTimeWrappedHourly`，只是从两色脉动升级为多色循环，
+  循环插值照灾厄 MulticolorLerp 口径）。贴图 28×28。价值 15 金
+  （**我按 JobAcc 饰品量级暂定，用户未点名**）。
+- **配方**（用户口述）：战士徽章 + 石巨人之眼 + 光明/暗影/恐惧/力量/视域之魂各 25 + 日曜碎片 50 @ 远古操纵机
+  （`ItemID.WarriorEmblem` / `ItemID.EyeoftheGolem` / `SoulofLight|Night|Fright|Might|Sight` / `ItemID.FragmentSolar`，
+  站台 `TileID.LunarCraftingStation` = 412）。八味材料全是原版，故**不走 TryGetMod 软引用**。
+  ⚠️ 用户原话写的是「战术徽章」，本机全盘查无此物（原版、灾厄、大修、本地化都没有），按「战士徽章」落地。
+  ⚠️ 字段名坑：石巨人之眼是 `ItemID.EyeoftheGolem`（**小写 the**），写 `EyeofTheGolem` 编译直接报 CS0117。
+- **破晓EX**：**敌怪与玩家都生效**的减益，置位在本类；敌怪侧数值与表现在 `CalamityExpansionGlobalNPC`，
+  玩家侧在 `CalamityExpansionPlayer`：
+  - `UpdateLifeRegen`：`lifeRegen -= 1500`（血条上显示每秒 **750**；本工程换算与中子熵变一致：lifeRegen ÷ 2 = 每秒），
+    `damage` 下限 750。
+  - `ModifyIncomingHit`：`modifiers.Defense.Flat -= 50` 与 `modifiers.FinalDamage *= 1.1f`（即「-50 防御 + 受到伤害 +10%」）。
+    走的是 1.4.4 的 `HitModifiers`——**与原版灵液/减防同一路数**，不是去改 `npc.defense`。
+  - `DrawEffects`：**粒子照原版破晓**（IL 实查 `NPC.UpdateNPC_BuffApplyVFX` 的 daybreak 支）：3/4 概率喷一枚
+    `DustID.OrangeTorch`（158）、scale 3.5、noGravity、速度 ×2.8 再 Y-0.5、其中 1/4 概率改为受重力并 scale×0.5；
+    外加 `Lighting.AddLight(npc.Center, 1f, 0.3f, 0.1f)` 的橙色照明。原版破晓不改敌怪染色，本移植也不改。
+  - 备查：原版 `BuffID.Daybreak` = 189、`ProjectileID.Daybreak` = 636。原版破晓的 DoT 按「扎在身上的投矛数量」叠，
+    本移植按用户口径改成**固定 750/s**。
+  - **死亡表现（2026-10-16 用户点名复刻，已落地）**：`GlobalNPC.HitEffect` 里判 `daybreakEX && npc.life <= 0`，
+    调 `DaybreakEX.DeathEffect`，照抄 `NPC.VanillaHitEffect` 的 daybreak 支：
+    ① 以 `npc.Hitbox.TopLeft()` 为原点、按本体宽高喷 **20 枚**尘，尘 ID 三选一 = `DustID.Torch`(6) /
+    `DustID.SolarFlare`(259) / `DustID.OrangeTorch`(158)（原版把这三个 ID 压在 `PrivateImplementationDetails`
+    的静态数组里，已用 Cecil 读出初始值 `[6, 259, 158]`），每枚 `alpha = 200`、`velocity *= 1.4`、
+    `scale += Main.rand.NextFloat()`，初速固定 `(0, -2.5)`；
+    ② `Main.netMode != MultiplayerClient` 时把破晓EX 传染给 **100 像素内**、未免疫、非 dontTakeDamage、
+    `lifeMax > 5`、非 friendly / townNPC 的敌怪（300 帧）——判据与原版逐条对齐。
+
+  - **玩家侧效果（2026-10-16 用户点名补齐）**：`CalamityExpansionPlayer` 里——`UpdateBadLifeRegen` 压
+    `Player.lifeRegen -= 1500`（同样每秒 750，换算与敌怪侧一致：lifeRegen ÷ 2）、`PostUpdateEquips` 扣
+    `Player.statDefense -= 50`、`ModifyHurt` 里 `modifiers.FinalDamage *= 1.1f`；玩家身上的粒子与照明在
+    `DaybreakEX.Update(Player)` 里出（每端各画自己那份，与原版对远程玩家的处理一致）。
+  - **PvP 施加路径（2026-10-16 补齐）**：物品打玩家 → `Content/Items/CalamityExpansionGlobalItem.cs` 的 `OnHitPvp`；
+    弹幕打玩家 → `CalamityExpansionGlobalProjectile.OnHitPlayer`（先挡 `hostile` 与 owner 越界）；两者共用
+    `CalamityExpansionPlayer.TryApplyDaybreakEXOnPvP(attacker, target, damageType)`（先判饰品，再判近战分类）。
+    ⚠️ **`Player.HurtInfo` 没有 `DamageType` 字段**（与 NPC 的 `HitInfo` 不同），命中类型只能从 `Item.DamageType` /
+    `Projectile.DamageType` 取——本批唯一的编译报错（CS1061）就出在这里。
+  - **多人口径（2026-10-16 适配）**：增益本身靠原版 `AddBuff`（非 quiet）同步，本工程不自己发 NetMessage；
+    数值各端本地算，但玩家生命以本人客户端为准，不会重复扣血；死亡爆尘是纯视觉（各端各画），死亡传染只在
+    `Main.netMode != MultiplayerClient` 端做一次（照原版判据）；PvP 施加落在「被击中那名玩家的客户端」那一次结算。
+  - **文案（2026-10-16 用户指定，中英同步）**：破晓EX 描述 = 「来自烈阳的光芒肆意灼烧」/
+    `Rays of the blazing sun burn without restraint`；中子熵变描述 = 「中子共振的能量击碎现实」/
+    `The energy of neutron resonance shatters reality`（原「熵变正在吞噬你」/ `Entropy is eating you away` 作废）；
+    徽章 tooltip 第 4 行改成「近战命中会造成破晓EX（对敌怪与玩家都生效）」/ 英文同步加了括号说明。
+
+### 5.4 烈火手套EX（FireGauntletEX）与燃烧IV（HellfireIV，2026-10-17 第四批）
+
+- **烈火手套EX**：近战饰品（JobAcc/Melee）。属性（用户口述）：**防御 +8**、**近战伤害/暴击率/攻速各 +22%**、
+  **仇恨 +400**、**近战击退 ×2**、**近战武器大小 +20%**、**允许自动挥舞近战武器与鞭子**。
+  落点：防御/仇恨/自动挥舞直接写玩家字段（`statDefense`、`aggro`、原版 `autoReuseAllWeapons`，后者被
+  `CanAutoReuseItem` 读取，鞭子也在覆盖内）；三围走 `GetDamage/GetCritChance/GetAttackSpeed(Melee)`；
+  击退与大小走 `CalamityExpansionPlayer.ModifyWeaponKnockback` / `ModifyItemScale`（都按 `DamageClass.Melee` 过滤）。
+- **配方**（用户口述）：烈火手套 + 狂战士手套 + 毁灭者徽章 + 日曜碎片 ×99 + 地狱锭 ×99 @ 远古操纵机
+  （`ItemID.FireGauntlet` / `BerserkerGlove` / `DestroyerEmblem` / `FragmentSolar` / `HellstoneBar`，
+  站台 `TileID.LunarCraftingStation`）。全是原版材料，不需要软引用。
+  贴图 26×30；价值 15 金（**用户未点名，沿用徽章口径**）；稀有度与战士徽章EX 共用 `WarriorEXRarity`（橙红渐变字色）。
+- **燃烧IV**：敌怪与玩家都生效；**每秒 900 生命**（`lifeRegen -= 1800`，与既有换算一致：lifeRegen ÷ 2 = 每秒）、
+  **防御 -75**（敌怪 `modifiers.Defense.Flat`，玩家 `statDefense`）、**受到伤害 +15%**（`FinalDamage *= 1.15f`）。
+  施加口与破晓EX **共用**：`CalamityExpansionPlayer.ApplyMeleeHitDebuffs`（物品/弹幕两路）+
+  `TryApplyMeleeHitDebuffsOnPvP`（PvP，由 `CalamityExpansionGlobalItem.OnHitPvp` 与
+  `CalamityExpansionGlobalProjectile.OnHitPlayer` 调用）。时长沿用破晓EX 的 300 帧（用户未点名）。
+- **视觉：完全复刻灾厄现代版 MiracleBlight（超位崩解），颜色改燃烧橙红**——
+  - 火花层：照 `MiracleBlight.DrawEffects`——1/4 概率一枚尘（`DustID.OrangeTorch`，noGravity，scale 0.7~0.85 并随体积微增）、
+    1/3 概率一枚火花粒子（原版是他们的 GlowSparkParticle，本工程用 `DRK_Spark` 承担），
+    取色从原版的 Red/MediumTurquoise/Orange/LawnGreen 换成燃烧橙红族四选一。
+  - 溶解层：`HellfireIV.Load()` 里 `On_Main.DrawNPC += ...`，把带标记的敌怪单独画进屏幕空间渲染目标
+    （`ScreenspaceTargetPool.Shared`，自姊妹工程/RenderTargetPool 那套），再用 Misc 着色器画回来；
+    噪声漂移 + `uOpacity 0.7` + 三项 cos/sin 抖动阈值，超过就抹掉、略低一档换成 `uColor`。
+  - 排除名单照原版：月亮领主（本体/手/头）与灾厄 Ares 五个部件；灾厄是软依赖，按名字 `TryFind` 懒构建。
+- ⚠️ **踩过的坑（重要）**：
+  ① 灾厄 2.1 那套 `SpriteBatchScope`（靠读 FNA 的 `beginCalled/sortMode/blendState…` 保存并还原调用方批次参数）
+  **在我们这里编译不过**——那些成员在随 tModLoader 分发的 FNA 参考程序集里是 internal；改用灾厄 **2.0.4** 渲染器的做法：
+  `End()` 之后用自己的 Begin/End，离场时按原版实体绘制那套标准参数重新 Begin
+  （Deferred + AlphaBlend + `Main.DefaultSamplerState` + `Main.Rasterizer` + `Main.GameViewMatrix.TransformationMatrix`），
+  这就是 `Common/Graphics/SpriteBatchScope.cs` 现在的实现与理由。
+  ② 原版 `Main.DrawNPC` 自身**不开批次**（IL 实查：方法体内没有 SpriteBatch.Begin/End），批次由调用方开着，
+  所以钩子入口可以直接 `End()`。
+  ③ 玩家侧 `Player.HurtInfo` 没有 `DamageType`（见 §5.3），命中类型仍由调用方从 Item/Projectile 取。
+
 ## 6. 工作流
 
 - 编译：`dotnet build -v q -nologo`。**C# 编译本身应为 0 警告 0 错误**（工程警告基线是 0）。
@@ -217,6 +408,10 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
   该目录在工作区之外，**沙箱内必报 `TML001 Access to the path … denied`，需提权运行**
   （Codex 沙箱把它算作沙箱审批，粒度策略下会被直接拒；要拿到 .tmod 得在非沙箱 shell 里跑这一条）。
   所以判断"代码写对不对"看的是编译器那两行的 0 警告 0 错误，而不是整体退出码。
+- **原版行为实查**：`powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\ReadVanillaIL.ps1 -Type <类型> [-ListMethods|-ListFields|-Method <方法名> -Needle <串>]`
+  ——用 Mono.Cecil 读 `tModLoader.dll`（内含合并进来的原版类）。列 API 成员、确认钩子名、看原版某分支的 IL 都靠它，
+  比翻源码快且是权威口径。脚本里 tModLoader.dll 路径写死（`D:\Game\Steam\steamapps\common\tModLoader\`），换机器要改；
+  文件必须带 **BOM**（PS 5.1 按 ANSI 读无 BOM 的 UTF-8 时，中文注释会把下一行换行吃掉，脚本直接废）。
 - 资源自查（**编译不报、只有进游戏才炸，且会禁用整个模组**）：
   - `powershell -ExecutionPolicy Bypass -File .\Tools\CheckImplicitTextures.ps1`（类同名隐式贴图）
   - `powershell -ExecutionPolicy Bypass -File .\Tools\CheckResources.ps1`（`"CalamityExpansion/…"` 字面量与常量拼接两类显式路径）
@@ -265,4 +460,26 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
   三枚 IDrawWarp 弹幕的扭曲表现、中子熵变的每秒 7500 掉血与染色——下次会话若提到就问一句，别当成已验过。
 - **文案待用户点名的两处**：中子锭的 tooltip（`万物之重，聚合指尖` / `The weight of all things, gathered at your fingertips`）
   是旧工程带来的 CWR 原味文案；中子熵变的描述被我按新名改成「熵变正在吞噬你」/ `Entropy is eating you away`（原文是"虚无正在吞噬你"）。
+- **第三批待用户复核（2026-10-16）**：① 破晓EX 的「每秒 750」是否就是本意（中子熵变是 7500/s，差 10 倍，别是漏写一个 0）；
+  ② 战士徽章EX 的**价值 15 金**是我按 JobAcc 量级暂定的；③ 破晓EX 的**附加时长 300 帧（5 秒）**是我照原版破晓武器补的；
+  ④ 原版「破晓敌人死亡时多炸一批尘 + 100 像素内传染」**已于 2026-10-16 按用户点名复刻落地**（见 §5.3）；
+  ⑤ 英文名 `Warrior Emblem EX` / `Daybreak EX` 是我拟的。
+- **第三批待实测（多人，2026-10-16）**：联机表现用户还没测过——重点看 ① PvP 施加是否只结算一次（物品路/弹幕路不重复加成）；
+  ② 玩家侧每秒 750 与 -50 防御在客机上与主机是否一致；③ 死亡传染是否只在主机/单机生效、客户端不重复传染；
+  ④ PvP 下破晓EX 的图标与倒计时是否正常。
+- **贴图尺寸口径（本批已按用户素材定，别当成漏做）**：用户给的素材（战士徽章 28×28、日曜胸甲 38×28、破晓图标 32×32）
+  **全是 2× 图**（每个像素都是 2×2 方块，与 `BeetleGlove.png` 26×30 = 13×15 翻倍同一口径）。
+  本批一律「不缩放、只换色」。若哪天发现游戏里物品图标偏大，就是这条口径要改：把素材减半到 1× 再染色。
+- **WIP（未点名，别当成漏做）**：`Content/Items/Accessories/JobAcc/Melee/` 下有
+  `BeetleGlove.png`（甲虫手套）与 `FireGauntletEX.png`（烈火手套EX，2026-10-16 已染成日曜红，见 §3.3）
+  两张**没有对应 .cs** 的贴图，等用户给规格再落地。JobAcc 目录结构沿用姊妹工程 `CalamityDemutation`
+  （Melee / Magic / Ranged / Rogue / Summon）。
+- **工程根目录的 `Daybroken.png`**：破晓EX 图标的参考副本，已入库为 `Content/Buffs/NegativeBuffs/DaybreakEX.png`；
+  根目录那份用户没点名要删，暂时留着（要清理说一声即可）。
 - **图标**（`icon*.png`）仍是 tModLoader 模板图。
+- **第四批待实测/待定（2026-10-17）**：① 燃烧IV 的溶解视觉**尚未进游戏实测**——重点看：批次接管是否与其它模组的
+  绘制钩子冲突（进不了画面/报 "Begin must be called" 就是这里）、溶解强度是否合适（`uOpacity 0.7` 可调）、
+  发光橙红是否够"燃烧"、火花密度是否过密；② 燃烧IV 的时长（现用 300 帧）与英文名 `Hellfire IV`；
+  ③ 烈火手套EX 的价值 15 金（沿用徽章口径）；④ PvP 与多人实测（施加只算一次、客机表现一致）。
+- **战士EX 档（稀有度）配色可调**：`Content/Rarities/WarriorEXRarity.cs` 顶部的 `GradientColors` 四色与 `CycleSpeed`
+  就是全部旋钮（觉得流得太快/太暗就改这两处）；档位显示名在两个语言文件的 `Rarities.WarriorEXRarity.DisplayName`。
