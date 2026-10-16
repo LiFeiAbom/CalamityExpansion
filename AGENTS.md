@@ -391,6 +391,8 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
     （`ScreenspaceTargetPool.Shared`，自姊妹工程/RenderTargetPool 那套），再用 Misc 着色器画回来；
     噪声漂移 + `uOpacity 0.7` + 三项 cos/sin 抖动阈值，超过就抹掉、略低一档换成 `uColor`。
   - 排除名单照原版：月亮领主（本体/手/头）与灾厄 Ares 五个部件；灾厄是软依赖，按名字 `TryFind` 懒构建。
+  - **文案（用户 2026-10-17 指定）**：燃烧IV 描述 = 「永不熄灭，万物成灰」/ `Never extinguished; all things turn to ash`
+    （数值不再写进减益描述，改由烈火手套EX 的 tooltip 承担，与破晓EX 的处理一致）。
 - ⚠️ **踩过的坑（重要）**：
   ① 灾厄 2.1 那套 `SpriteBatchScope`（靠读 FNA 的 `beginCalled/sortMode/blendState…` 保存并还原调用方批次参数）
   **在我们这里编译不过**——那些成员在随 tModLoader 分发的 FNA 参考程序集里是 internal；改用灾厄 **2.0.4** 渲染器的做法：

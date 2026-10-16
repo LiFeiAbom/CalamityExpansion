@@ -9,7 +9,7 @@ Buffs: {
 
 	HellfireIV: {
 		DisplayName: 燃烧IV
-		Description: 每秒损失 900 生命；防御力降低 75；受到的伤害增加 15%
+		Description: 永不熄灭，万物成灰
 	}
 
 	NeutronEntropy: {
