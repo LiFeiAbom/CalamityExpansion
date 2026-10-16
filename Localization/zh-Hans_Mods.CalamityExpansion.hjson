@@ -75,8 +75,10 @@ Items: {
 	}
 }
 
-Rarities.NeutronRarity.DisplayName: 中子
-Rarities.WarriorEXRarity.DisplayName: 战士EX
+Rarities: {
+	NeutronRarity.DisplayName: 中子
+	WarriorEXRarity.DisplayName: 战士EX
+}
 
 Projectiles: {
 	CENeutronExplode.DisplayName: 中子大爆点

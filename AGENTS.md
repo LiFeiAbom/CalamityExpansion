@@ -16,6 +16,13 @@
 - **继续开发时的检查顺序**：`dotnet build -v q -nologo`（沙箱内末尾打包会报 TML001，只看编译器那两行）
   → `Tools/CheckImplicitTextures.ps1` → `Tools/CheckResources.ps1`；要拿到可进游戏的 `.tmod` 必须在**非沙箱 shell** 里跑构建。
 - **下一步最该做的**：进游戏实测第四批的溶解视觉（重点：批次接管与其它模组绘制钩子是否冲突），见 §7「第四批待实测/待定」。
+- **2026-10-17 深夜追加（本次推送）**：修掉"进游戏模组被禁用"——**燃烧IV 的加载期 NRE**。
+  症状（`client.log`）：`[ERROR] 该模组加载时发生错误 CalamityExpansion v0.1 / 该模组已被禁用 / 此错误是由
+  CalamityExpansion.Content.Buffs.NegativeBuffs.HellfireIV 类引起的`，栈顶 `HellfireIV.Load() ... HellfireIV.cs:line 56`。
+  根因（IL 实查，见 §5.4 坑④）：**内容的 `Load()` 早于 `Mod.Load()`**，内容加载期 `CalamityExpansion.Instance` 还是 null。
+  改法一行：`NoiseTexture = ModContent.Request<Texture2D>(CalamityExpansionConstant.ExtraTextures + "Neurons");`。
+  已实测：用户 2026-10-17 01:52 重建 + 热重载后，`Main::DrawNPC` 钩子挂上、模组一路走到「完成最后步骤」，不再被禁用。
+  另：本轮构建顺手让 tML 重写了那两份 hjson（`Rarities.*` 被规范成 `Rarities: { … }` 段），一起提交。
 
 > 本文件是给后续会话/协作者的项目记忆：工程口径、本次移植的清单与裁剪、踩过的坑、当前状态。
 > 改动工程时请同步更新它。内容来源（旧工程）是 `..\CalamityDemutation`，它的 `AGENTS.md` 里有更完整的
@@ -402,6 +409,14 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
   ② 原版 `Main.DrawNPC` 自身**不开批次**（IL 实查：方法体内没有 SpriteBatch.Begin/End），批次由调用方开着，
   所以钩子入口可以直接 `End()`。
   ③ 玩家侧 `Player.HurtInfo` 没有 `DamageType`（见 §5.3），命中类型仍由调用方从 Item/Projectile 取。
+  ④ **加载顺序：内容的 `Load()` 早于 `Mod.Load()`**（2026-10-17 踩点，IL 实查）。每个模组的流程是
+  `AutoloadConfig()` → `PrepareAssets()` → **`Autoload()`（本模组所有 ModType / ModSystem 的 Load 都在这一步）** →
+  **`Load()`（`Instance = this` 在这一步）** → `SystemLoader.OnModLoad()`。所以**任何 ModType 的 `Load()` 里都不能碰
+  `CalamityExpansion.Instance`**：内容加载期它还是 null，一碰就 NRE、整个模组被禁用，而且 `Mod.Load()` 根本不会跑
+  （连 `EffectLoader` 的着色器注册都到不了）。取资产直接 `ModContent.Request` / `Mod.Assets` —— 资产仓库由更早的
+  `PrepareAssets()` 建好，Load 期可用（灾厄 `MiracleBlight` 那套懒取 `field ??= ModContent.Request<Texture2D>(...)` 也行）。
+  工程内其余 `Instance` 用法已逐处复核安全：`EffectLoader`（在 `Mod.Load` 里调）、`BaseHeldProjCE`（运行期）、
+  `ConfigSystem.Instance?`（`AutoloadConfig` 阶段已赋值，且全走 `?.`）。
 
 ## 6. 工作流
 
@@ -428,8 +443,11 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
 - 本地化：每个语言一份扁平 hjson，顶层 `Buffs` / `Items` / `Projectiles` / `Configs`（另加 tML 自己写的
   `Rarities.X.DisplayName` 这类根级点号键）。玩家可见文本改动
   （物品/弹幕/减益的名称与描述、配置项）**必须同步补两个语言文件**；物品/弹幕默认分类即 "Items"/"Projectiles"。
-  **行尾**：本工程全部文件是 **LF**（提取出来的与新建的都一致，与旧工程 CalamityDemutation 的 CRLF 口径不同），
-  别照着旧工程的习惯往回整成 CRLF。
+  **行尾**：`.cs` / `.md` / `Tools\*.ps1` 一律 **LF**（与旧工程 CalamityDemutation 的 CRLF 口径不同，别照旧习惯往回整）。
+  例外只有三处：**tML 自己重写的这两份 hjson（它会写成 CRLF，别手动改回去）**、以及手写的 `CalamityExpansion.cs` /
+  `build.txt`（CRLF + BOM）。⚠️ 用 apply_patch 改文件时它会把**整个文件**写成 LF —— 改到那几个 CRLF 文件时留神；
+  反过来，把 LF 文件整成 CRLF 也是错（本工程 `.cs` 的主流是 LF + BOM）。仓库 `core.autocrlf=true`，
+  **行尾变化进不了 `git diff`**，只看 diff 是发现不了的（自查：`[IO.File]::ReadAllText` 里数 `\r\n` 与裸 `\n`）。
   ⚠️ **tML 会重写这两个文件**（2026-10-15 实测）：新增内容/配置项后的那次加载，tML 会把新键补进去——
   **en-US 补的是英文默认值、zh-Hans 补的是 `//` 注释占位**，而且**会把该段已有的手写值一起冲掉**
   （本次 `Configs` 段的中文就被清成了注释占位，进游戏看配置全是英文默认值）。

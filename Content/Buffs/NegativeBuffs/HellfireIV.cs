@@ -50,10 +50,14 @@ namespace CalamityExpansion.Content.Buffs.NegativeBuffs
         private static bool exclusionListBuilt;
         /// <summary>
         /// 加载钩子：请求噪声贴图、挂 Main.DrawNPC 钩子（照灾厄 MiracleBlight 的做法）
+        /// ⚠️ 贴图请求走 <c>ModContent.Request</c>，**不能**走工程自持的 <c>CalamityExpansion.Instance.Assets</c>——
+        /// IL 实查本版 tML 的每模组加载顺序是 <c>Autoload()</c>（所有内容的 Load 在这一步）→ <c>Load()</c>
+        /// （<c>Instance = this</c> 在这一步），即内容 Load 期间 <c>Instance</c> 仍为 null，那样写会 NRE 把整个模组禁用；
+        /// 而资产仓库由更早的 <c>Mod.PrepareAssets()</c> 建好，所以 Load 期直接用 ModContent/Mod.Assets 取图是安全的。
         /// </summary>
         public override void Load()
         {
-            NoiseTexture = CalamityExpansion.Instance.Assets.Request<Texture2D>(CalamityExpansionConstant.ExtraTextures + "Neurons");
+            NoiseTexture = ModContent.Request<Texture2D>(CalamityExpansionConstant.ExtraTextures + "Neurons");
             On_Main.DrawNPC += DrawNPCWithHellfireIV;
         }
         /// <summary>

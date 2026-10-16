@@ -75,8 +75,10 @@ Items: {
 	}
 }
 
-Rarities.NeutronRarity.DisplayName: Neutron
-Rarities.WarriorEXRarity.DisplayName: Warrior EX
+Rarities: {
+	NeutronRarity.DisplayName: Neutron
+	WarriorEXRarity.DisplayName: Warrior EX
+}
 
 Projectiles: {
 	CENeutronExplode.DisplayName: Neutron Explosion
