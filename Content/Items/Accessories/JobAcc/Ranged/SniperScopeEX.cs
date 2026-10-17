@@ -90,10 +90,12 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
             player.GetModPlayer<CalamityExpansionPlayer>().sniperScopeEX = true;
         }
         /// <summary>
-        /// 配方（2026-10-17 用户改过）：侦察镜 + **潜行者箭袋 + 熔岩箭袋** + 石巨人之眼
+        /// 配方（2026-10-17 用户改过）：侦察镜 + **潜行者箭袋 + 熔岩箭袋**
         /// + 五种魂各 25 + 星旋碎片 50 @ 远古操纵机。
         /// （用户原话「魔法箭袋改成潜行者箭袋 + 熔岩箭袋」；本条配方里原本没有魔法箭袋这一味，
         /// 故按意思把这两个箭袋直接加进去。）
+        /// ⚠️ **石巨人之眼已删除**（用户 2026-10-17）——它本来就是侦察镜 `ReconScope` 的配方材料，
+        /// 这条配方已经有成品的侦察镜，再要一次就重复了。
         /// </summary>
         public override void AddRecipes()
         {
@@ -101,7 +103,6 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
                 .AddIngredient(ItemID.ReconScope)      // 侦察镜（原版）
                 .AddIngredient(ItemID.StalkersQuiver)  // 潜行者箭袋（原版）
                 .AddIngredient(ItemID.MoltenQuiver)    // 熔岩箭袋（原版）
-                .AddIngredient(ItemID.EyeoftheGolem)   // 石巨人之眼（原版字段名是小写 the）
                 .AddIngredient(ItemID.SoulofLight, 25)
                 .AddIngredient(ItemID.SoulofNight, 25)
                 .AddIngredient(ItemID.SoulofFright, 25)
