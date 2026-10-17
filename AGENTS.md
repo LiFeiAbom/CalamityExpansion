@@ -1,40 +1,44 @@
 # CalamityExpansion — 工程记忆（新会话先读这份）
 
-## 0. 交接摘要（2026-10-16 / 10-17 这两天的会话）
+## 0. 交接摘要（最新：2026-10-17 下半场；下次继续从这里读）
 
-- **做完的**（从上次提交 `bd73031` 之后累积的全部改动，本次一次性提交）：
-  ① 第三批：**战士徽章EX + 破晓EX**（§3.2 / §5.3）——含玩家侧效果、PvP 施加、多人口径、死亡爆尘与传染复刻；
-  ② 第二张染色：**烈火手套EX 贴图**（§3.3，两轮改口径后定稿）；
-  ③ 第四批：**烈火手套EX + 燃烧IV**（§3.4 / §5.4）——含 MiracleBlight 溶解视觉的全复刻（着色器 + 渲染基建）、配方、PvP 与多人适配；
-  ④ **战士EX 稀有度**（§5.3 / §5.4）：橙红渐变字色，两件战士饰品共用；
-  ⑤ 工具：`Tools/ReadVanillaIL.ps1`（用 Mono.Cecil 读 tModLoader.dll 查原版钩子/数值/IL，非 ASCII 注释必须配 BOM）。
-  ⑥ 文案（2026-10-17 追加）：两件近战饰品的 tooltip **不再列减益数值**，只留「近战命中会造成X」一句（见 §5.4 文案条）；
-  ⑦ 第三张染色（2026-10-17 追加）：**游侠徽章 RangerEmblemEX** 贴图按星旋盔甲色系染好（§3.3 第三条）；
-  ⑧ 第五批（2026-10-17 追加）：**游侠徽章EX**（远程饰品 + 星旋绿青渐变稀有度）按用户口述落地（§5.5）。
-  ⑨ 第六批（2026-10-17 追加）：**狙击镜EX**（§5.6）——复合造型贴图 + 22% 三围/40% 省弹/50 穿透 +
-  魔法箭袋 + 侦察镜缩放 + 额外夜明箭弹（全部原版弹幕）；同时删掉游侠徽章EX 的远程攻速、
-  删掉四张参考图与根目录 `Daybroken.png`。
-  ⚠️ 同一天稍后**按用户要求删掉了「命中发射星璇火箭」**（爆炸太频繁、卡顿），连同为此加的
-  PvP 封包与全局弹幕钩子一起撤除（详见 §5.6）。
-- **当前状态**：C# 编译 **0 警告 0 错误**；`CheckImplicitTextures.ps1` 16 个类全命中、`CheckResources.ps1` 27 条全命中；
-  `.tmod` 已打包进 `…\tModLoader\Mods\`。
-- **实测状态**：破晓EX 那一批用户进游戏测过、回「没有问题」；**烈火手套EX / 燃烧IV / 战士EX 档尚未进游戏实测**。
-- **待用户点名的小口径**：燃烧IV 的时长（现 300 帧）与英文名（现 `Hellfire IV`）、烈火手套EX 的价值（现 15 金）、
-  溶解强度（`HellfireIV.DissolveOpacity`，现 0.7）、战士EX 档的配色与速度（`WarriorEXRarity` 顶部两个旋钮）。
-- **继续开发时的检查顺序**：`dotnet build -v q -nologo`（沙箱内末尾打包会报 TML001，只看编译器那两行）
-  → `Tools/CheckImplicitTextures.ps1` → `Tools/CheckResources.ps1`；要拿到可进游戏的 `.tmod` 必须在**非沙箱 shell** 里跑构建。
-- **下一步最该做的**：进游戏实测第四批的溶解视觉（重点：批次接管与其它模组绘制钩子是否冲突），见 §7「第四批待实测/待定」。
-- **2026-10-17 深夜追加（本次推送）**：修掉"进游戏模组被禁用"——**燃烧IV 的加载期 NRE**。
-  症状（`client.log`）：`[ERROR] 该模组加载时发生错误 CalamityExpansion v0.1 / 该模组已被禁用 / 此错误是由
-  CalamityExpansion.Content.Buffs.NegativeBuffs.HellfireIV 类引起的`，栈顶 `HellfireIV.Load() ... HellfireIV.cs:line 56`。
-  根因（IL 实查，见 §5.4 坑④）：**内容的 `Load()` 早于 `Mod.Load()`**，内容加载期 `CalamityExpansion.Instance` 还是 null。
-  改法一行：`NoiseTexture = ModContent.Request<Texture2D>(CalamityExpansionConstant.ExtraTextures + "Neurons");`。
-  已实测：用户 2026-10-17 01:52 重建 + 热重载后，`Main::DrawNPC` 钩子挂上、模组一路走到「完成最后步骤」，不再被禁用。
-  另：本轮构建顺手让 tML 重写了那两份 hjson（`Rarities.*` 被规范成 `Rarities: { … }` 段），一起提交。
+**这次（2026-10-17 下半场）做完的**（全部已提交并推送，HEAD = `6b1ed3f`）：
 
-> 本文件是给后续会话/协作者的项目记忆：工程口径、本次移植的清单与裁剪、踩过的坑、当前状态。
-> 改动工程时请同步更新它。内容来源（旧工程）是 `..\CalamityDemutation`，它的 `AGENTS.md` 里有更完整的
-> 换算表、命名规则与灾厄源码侦察路线（本文件的很多口径都继承自那里）。
+1. **文案**：两件近战饰品的 tooltip 不再列出破晓EX / 燃烧IV 的数值，只保留「近战命中会造成X」；
+   减益数值现在只存在于代码与本文档（见 §5.4 文案条）。
+2. **游侠徽章EX**（§5.5）：贴图按星旋盔甲色系染好（灰盘不动、绿环 + 青色能量箭）；
+   属性 = **+18% 远程伤害 / +18% 远程暴击率 / +18% 弓箭伤害 / +18% 弹药飞行速度 / 82% 概率不消耗弹药**；
+   **远程攻速已按用户要求删掉**（别再当成漏做，也别和「弹药飞行速度」混）。
+3. **狙击镜EX**（§5.6）：贴图按 Crossbow_Scope 的**复合造型**重绘（三处金圈），镜身染成星旋胸甲的
+   「深紫底 + 灰板件 + 青色高光 + 深绿暗部」；属性 = +22% 远程伤害/暴击率/箭矢伤害/弹幕飞行速度、
+   +50 远程穿透、40% 省弹、-400 仇恨、熔岩箭袋 + 潜行者箭袋效果（箭伤各 +10%，仇恨只算一次）、
+   可见时侦察镜缩放、50% 额外夜明箭/弹；**星璇火箭已删**（太卡）。
+4. **配方改档**：战士徽章EX / 游侠徽章EX = 对应徽章 + **神圣锭 ×15** + 五种魂各 25 @ **秘银砧**
+   （石巨人之眼与月亮碎片已去掉）；狙击镜EX = 侦察镜 + 潜行者箭袋 + 熔岩箭袋 + 五种魂各 25 + 星旋碎片 50 @ 远古操纵机。
+5. **清理**：四张参考图（Crossbow_Scope / Recon_Scope / Ranger_Emblem / Vortex_armor）与根目录 Daybroken.png 已删；
+   BeetleGlove.png 也已不在。
+
+**当前状态**：C# 编译 **0 警告 0 错误**；CheckImplicitTextures.ps1 **18 个类**全命中、
+CheckResources.ps1 **27 条**全命中；.tmod 已打包（2026-10-17 23:12）；工作区干净、master 与远端同步。
+
+**新素材（还没处理）**：Content/Items/Accessories/JobAcc/Magic/Sorcerer_Emblem.webp（巫士徽章原图，
+用户 2026-10-17 放的，已被 git add -A 一并提交）。**还没有染色、没有 .cs、没有规格**——用户下次大概率会点名魔法系饰品。
+
+**待实测（下次进游戏优先看）**：
+- 游侠徽章EX：远程三围与 +18% 弓箭伤害是否如数、82% 省弹手感、弹速是否明显更快。
+- 狙击镜EX：22% 箭伤 + 两个箭袋的 +20% 箭伤叠起来是否过强、50% 双发夜明箭/弹、按 R 看省弹、
+  缩放是否**只在饰品可见时**生效、命中时确认**不再**有火箭。
+- 老账：烈火手套EX / 燃烧IV 的溶解视觉与战士EX 档仍未进游戏实测（见 §7「第四批待实测/待定」）。
+
+**待用户点名**：狙击镜EX 的价值（现 15 金）与英文名（现 `Sniper Scope EX`）；
+两个箭袋的箭伤是否要砍成只算一次（`SniperScopeEX.QuiverArrowDamageBonus`）；
+游侠徽章EX 的价值（现 15 金）；巫士徽章那张图要怎么做。
+
+**下次开工的顺序**：`dotnet build -v q -nologo` → `Tools/CheckImplicitTextures.ps1` → `Tools/CheckResources.ps1`
+（沙箱内构建会在打包那步报 TML001，要出可进游戏的 `.tmod` 得提权跑构建）；改完照例 `git add -A` → commit → push。
+
+更早两天的明细（第三批战士徽章EX/破晓EX、第四批烈火手套EX/燃烧IV、燃烧IV 的加载期 NRE 与 IL 坑）
+都还在下面 §3.2–§3.4 与 §5.3–§5.4 里，需要时按节查。
 
 ## 1. 工程是什么
 
@@ -635,13 +639,12 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
 - **贴图尺寸口径（本批已按用户素材定，别当成漏做）**：用户给的素材（战士徽章 28×28、日曜胸甲 38×28、破晓图标 32×32）
   **全是 2× 图**（每个像素都是 2×2 方块，与 `BeetleGlove.png` 26×30 = 13×15 翻倍同一口径）。
   本批一律「不缩放、只换色」。若哪天发现游戏里物品图标偏大，就是这条口径要改：把素材减半到 1× 再染色。
-- **WIP（未点名，别当成漏做）**：`Content/Items/Accessories/JobAcc/Melee/BeetleGlove.png`（甲虫手套）
-  仍然**没有对应 .cs**，等用户给规格再落地；`Ranged/` 下 2026-10-17 新增的
-  `Ranger_Emblem.webp`（原素材）× `Vortex_armor.webp`（星旋胸甲配色参考）+ `RangerEmblemEX.png`
-  已经落地成 `RangerEmblemEX`（§5.5），那两张 .webp 只作参考图留档。
-  同目录的狙击镜贴图已经改名成 `SniperScopeEX.png` 并配了 `SniperScopeEX.cs`（§5.6）；
-  四张参考图（`Crossbow_Scope.png` / `Recon_Scope.webp` / `Ranger_Emblem.webp` / `Vortex_armor.webp`）
-  与根目录 `Daybroken.png` 已经在 2026-10-17 按用户要求删掉（要找回从 git 历史取）。
+- **WIP（未点名，别当成漏做）**：`Content/Items/Accessories/JobAcc/Magic/Sorcerer_Emblem.webp`
+  （巫士徽章原图，用户 2026-10-17 放下）**没有对应 .cs、没有染色、没有规格**——下次点名魔法系饰品时就是它。
+  四个饰品目录现在的状态：`Melee/` 战士徽章EX + 烈火手套EX（都已完成），
+  `Ranged/` 游侠徽章EX + 狙击镜EX（都已完成），`Magic/` 只有这张原图，`Rogue/` `Summon/` 为空。
+  `BeetleGlove.png` 与四张参考图（`Crossbow_Scope.png` / `Recon_Scope.webp` / `Ranger_Emblem.webp` /
+  `Vortex_armor.webp`）、根目录 `Daybroken.png` 都已在 2026-10-17 按用户要求删掉（要找回从 git 历史取）。
   JobAcc 目录结构沿用姊妹工程 `CalamityDemutation`（Melee / Magic / Ranged / Rogue / Summon）。
 - **工程根目录的 `Daybroken.png`**：破晓EX 图标的参考副本，已入库为 `Content/Buffs/NegativeBuffs/DaybreakEX.png`；
   根目录那份用户没点名要删，暂时留着（要清理说一声即可）。
