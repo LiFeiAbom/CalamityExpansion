@@ -201,6 +201,24 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
   改成**按"环 / 箭"分色**（H 版：环=绿+薄荷，箭=绿→青）后箭头才立得住。对比图在
   `%TEMP%\ce_ranged_work\`（`compare.png` / `compare2.png` / `compare3.png` / `style_check.png`）。
 
+**第四张：狙击镜 ReconScope（2026-10-17，仿 Crossbow_Scope 格式重绘）**
+
+- **素材**：`Ranged/Recon_Scope.webp`（30×30 = 15×15 @2×，用户给的原图：深紫描边 + 金环 + 绿镜片，16 色）；
+  格式参考 `Ranged/Crossbow_Scope.png`（34×36 = 17×18 @2×，黑描边 + 灰金属 + 红镜片 + 粉色反光，18 色）。
+- **输出**：`Ranged/ReconScope.png`（30×30 @2×，12 色）。**没有 .cs**，与 `BeetleGlove.png` 同为 WIP。
+  （文件名按 tML 隐式贴图规则取类名样式 `ReconScope`；用户给的参考图 `Recon_Scope.webp` 带下划线，留在原位。）
+- **做法**：以 Recon 原图这支**单镜子**的形状与构图为底，整张重映射进 Crossbow 的色板与画法——
+  深紫描边 `(19,4,36)` → 近黑 `(17,17,17)`；紫灰镜筒 `(45,52,83)/(81,75,96)/(120,115,144)/(155,150,176)/(177,174,196)`
+  → 灰阶 `51/66/106/159/209`；金环 `(76,37,0)/(110,72,0)/(148,106,24)/(185,164,23)/(248,222,152)`
+  → 亮钢灰 `51/66/159/209/209`；绿镜片 → 红镜片
+  `(39,74,42)→(94,0,0)`、`(95,135,85)→(255,0,0)`、`(139,182,128)→(196,55,55)`、`(213,224,169)→(255,128,128)`。
+- ⚠️ **走过的弯路**：先试过从头用距离场程序化生成（v1–v9，见 `%TEMP%\ce_scope_work\`），
+  物镜总是糊成一团、镜筒发细像"勺子"；最后以原图重映射的版本最像成品。**以后做这类"同格式重绘"，先重映射再手修，
+  别从零画。**
+- **备选**：绿镜片版（绿用星旋色阶 `24,93,66 → 47,184,131 → 34,221,151 → 213,255,235`）在
+  `%TEMP%\ce_scope_work\ReconScope_green.png`；画布若要和 Crossbow 完全一致（34×36）需要重画一版，
+  现在的 30×30 与 34×36 差 4×6 像素。
+
 ### 3.4 第四批（2026-10-17，烈火手套EX + 燃烧IV）
 
 同第三批：**不是从旧工程搬来的**，是用户给素材 + 口述规格、本工程新写的。
@@ -548,6 +566,8 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
   仍然**没有对应 .cs**，等用户给规格再落地；`Ranged/` 下 2026-10-17 新增的
   `Ranger_Emblem.webp`（原素材）× `Vortex_armor.webp`（星旋胸甲配色参考）+ `RangerEmblemEX.png`
   已经落地成 `RangerEmblemEX`（§5.5），那两张 .webp 只作参考图留档。
+  同目录另有 2026-10-17 新增的 `Crossbow_Scope.png`（格式参考）、`Recon_Scope.webp`（原素材）与
+  `ReconScope.png`（按 Crossbow 格式重绘的狙击镜，见 §3.3 第四条）——**还没配 .cs**。
   JobAcc 目录结构沿用姊妹工程 `CalamityDemutation`（Melee / Magic / Ranged / Rogue / Summon）。
 - **工程根目录的 `Daybroken.png`**：破晓EX 图标的参考副本，已入库为 `Content/Buffs/NegativeBuffs/DaybreakEX.png`；
   根目录那份用户没点名要删，暂时留着（要清理说一声即可）。
