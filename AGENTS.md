@@ -488,11 +488,14 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
 
 - **游侠徽章EX**：远程饰品（JobAcc/Ranged）。贴图 = §3.3 第三条那张按星旋盔甲色系染好的
   `RangerEmblemEX.png`（28×28，灰盘不动、银环走盔甲绿、箭身走绿色→青色发光阶）。
-  属性（用户 2026-10-17 口述）：**+18% 远程伤害 / +18% 远程暴击率 /
+  属性（用户 2026-10-17 口述）：**+18% 远程伤害 / +18% 远程暴击率 / +18% 弓箭伤害 /
   +18% 弹药飞行速度 / **82% 概率不消耗弹药**（2026-10-17 当天由 18% 改过来——用户先要 18%，
   后改口「算了改成82%概率不消耗弹药」；旋钮就是 `RangerEmblemEX.AmmoSaveChance`）。
 - **落点**（与战士徽章EX 同一套骨架）：
-  - 两围直接写 `player.GetDamage / GetCritChance(DamageClass.Ranged)`，
+  - 两围直接写 `player.GetDamage / GetCritChance(DamageClass.Ranged)`；
+    弓箭伤害走原版 `player.arrowDamage += 0.18f`（`StatModifier`，每帧由 `Player.ResetEffects` 复位）——
+    IL 实查 `Player.PickAmmo`：只有 `AmmoID.Sets.IsArrow[ammo.ammo]` 时才会 `CombineWith(arrowDamage)`，
+    所以子弹/火箭**不吃**这条；常量是 `RangerEmblemEX.ArrowDamageBonus`。
     并给 `CalamityExpansionPlayer.rangerEmblemEX` 置位（`ResetEffects` 每帧复位）。
     ⚠️ **2026-10-17 用户点名删掉了「远程攻击速度」**（`GetAttackSpeed` 那行已移除、tooltip 那行也删了）——
     注意区分：`弹药飞行速度`（弹幕初速，走 `ModifyShootStats`）保留，`远程射击速度`（攻速）不要。

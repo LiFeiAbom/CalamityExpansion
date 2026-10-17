@@ -27,6 +27,11 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
         public const float RangedBonus = 0.18f;
         /// <summary>远程暴击率加成（按百分点加，18 = +18%）</summary>
         public const float RangedCritBonus = 18f;
+        /// <summary>
+        /// 弓箭伤害加成（比例，用户 2026-10-17 追加）：走原版 <c>Player.arrowDamage</c>（StatModifier），
+        /// 只作用于**箭类弹药**（<c>AmmoID.Arrow</c>），子弹/火箭等不受影响
+        /// </summary>
+        public const float ArrowDamageBonus = 0.18f;
         /// <summary>弹药飞行速度加成（比例，射出的弹幕初速乘 1.18）</summary>
         public const float AmmoVelocityBonus = 0.18f;
         /// <summary>不消耗弹药的概率（0.82 = 82%，判定在 CanConsumeAmmo；用户 2026-10-17 由 18% 改为 82%）</summary>
@@ -51,6 +56,7 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
         {
             player.GetDamage(DamageClass.Ranged) += RangedBonus;
             player.GetCritChance(DamageClass.Ranged) += RangedCritBonus;
+            player.arrowDamage += ArrowDamageBonus;
             player.GetModPlayer<CalamityExpansionPlayer>().rangerEmblemEX = true;
         }
         /// <summary>
