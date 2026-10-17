@@ -9,7 +9,7 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
     /// 游侠徽章EX（RangerEmblemEX） - 月后远程饰品。贴图是原版游侠徽章按**星旋盔甲**色系染成的
     /// 「灰盘 + 绿环 + 青色能量箭」（2026-10-17，做法见 AGENTS.md §3.3 第三条）。
     /// 属性（用户 2026-10-17 指定）：+18% 远程伤害、+18% 远程暴击率、+18% 远程攻击速度、
-    /// +18% 弹药飞行速度、**18% 概率不消耗弹药**。
+    /// +18% 弹药飞行速度、**82% 概率不消耗弹药**。
     /// <para>
     /// 落点：三围直接在本类的 <see cref="UpdateAccessory"/> 里加；「省弹」与「弹速」要到真正消耗/射出那一刻
     /// 才有对象可改，故写在 <see cref="CalamityExpansionPlayer"/> 的 <c>CanConsumeAmmo</c> /
@@ -28,8 +28,8 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
         public const float RangedCritBonus = 18f;
         /// <summary>弹药飞行速度加成（比例，射出的弹幕初速乘 1.18）</summary>
         public const float AmmoVelocityBonus = 0.18f;
-        /// <summary>不消耗弹药的概率（0.18 = 18%，判定在 CanConsumeAmmo）</summary>
-        public const float AmmoSaveChance = 0.18f;
+        /// <summary>不消耗弹药的概率（0.82 = 82%，判定在 CanConsumeAmmo；用户 2026-10-17 由 18% 改为 82%）</summary>
+        public const float AmmoSaveChance = 0.82f;
         /// <summary>
         /// 物品基础属性：28×28 的饰品贴图（与用户素材同口径）。稀有度走本工程自带的
         /// <see cref="RangerEXRarity"/>（星旋盔甲色系：深绿 → 绿 → 亮绿 → 青 的渐变字色），

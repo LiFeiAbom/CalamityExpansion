@@ -451,7 +451,8 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
 - **游侠徽章EX**：远程饰品（JobAcc/Ranged）。贴图 = §3.3 第三条那张按星旋盔甲色系染好的
   `RangerEmblemEX.png`（28×28，灰盘不动、银环走盔甲绿、箭身走绿色→青色发光阶）。
   属性（用户 2026-10-17 口述）：**+18% 远程伤害 / +18% 远程暴击率 / +18% 远程攻击速度 /
-  +18% 弹药飞行速度 / 18% 概率不消耗弹药**。
+  +18% 弹药飞行速度 / **82% 概率不消耗弹药**（2026-10-17 当天由 18% 改过来——用户先要 18%，
+  后改口「算了改成82%概率不消耗弹药」；旋钮就是 `RangerEmblemEX.AmmoSaveChance`）。
 - **落点**（与战士徽章EX 同一套骨架）：
   - 三围直接写 `player.GetDamage / GetCritChance / GetAttackSpeed(DamageClass.Ranged)`，
     并给 `CalamityExpansionPlayer.rangerEmblemEX` 置位（`ResetEffects` 每帧复位）。
@@ -558,7 +559,7 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
 - **战士EX 档（稀有度）配色可调**：`Content/Rarities/WarriorEXRarity.cs` 顶部的 `GradientColors` 四色与 `CycleSpeed`
   就是全部旋钮（觉得流得太快/太暗就改这两处）；档位显示名在两个语言文件的 `Rarities.WarriorEXRarity.DisplayName`。
 - **第五批待复核（2026-10-17，游侠徽章EX）**：① 未进游戏实测——重点看远程三围是否如数生效、
-  弹药初速是否真的 ×1.18（视觉上"打得更直更快"）、省弹手感是否约 1/5 发不扣（可按 `R` 键看弹药数）；
-  ② 「降低18%弹药消耗」我实现成 **18% 概率不消耗**，若用户本意是"弹药消耗量 ×0.82"（如一次扣 2 发的武器只扣 1.64）
-  那条路原版没有对应字段、只能整发判定，需用户点名再议；③ 价值 15 金、英文名 `Ranger Emblem EX`、
+  弹药初速是否真的 ×1.18（视觉上"打得更直更快"）、省弹手感是否**约 5 发里 4 发不扣**（可按 `R` 键看弹药数）；
+  ② 「弹药消耗」现实现成 **82% 概率不消耗**（原版没有按比例扣减的口子，只能整发判定）；
+  ③ 价值 15 金、英文名 `Ranger Emblem EX`、
   稀有度四色与 `CycleSpeed` 都是沿用/暂定项（`RangerEXRarity` 顶部同样是旋钮）。
