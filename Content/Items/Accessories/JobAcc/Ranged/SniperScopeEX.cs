@@ -36,6 +36,11 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
         public const float AmmoSaveChance = 0.40f;
         /// <summary>远程护甲穿透（点，用户 2026-10-17 指定 50）</summary>
         public const float ArmorPenetration = 50f;
+        /// <summary>
+        /// 箭矢伤害加成（比例，用户 2026-10-17 追加）：走原版 <c>Player.arrowDamage</c>（StatModifier），
+        /// 只作用于箭类弹药（`AmmoID.Sets.IsArrow` 才吃），子弹/火箭不吃
+        /// </summary>
+        public const float ArrowDamageBonus = 0.22f;
         /// <summary>额外射出一发夜明箭 / 夜明弹的概率（0.5 = 50%）</summary>
         public const float ExtraLuminiteChance = 0.5f;
         /// <summary>
@@ -59,6 +64,7 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
             player.GetDamage(DamageClass.Ranged) += RangedBonus;
             player.GetCritChance(DamageClass.Ranged) += RangedCritBonus;
             player.GetArmorPenetration(DamageClass.Ranged) += ArmorPenetration;
+            player.arrowDamage += ArrowDamageBonus;
             // 魔法箭袋：原版字段，箭矢伤害/速度加成与箭矢回收都挂在它身上
             player.magicQuiver = true;
             // 侦察镜的缩放能力（原版 Player.scope）：只在饰品显示（未隐藏外观）时给，用户 2026-10-17 指定
