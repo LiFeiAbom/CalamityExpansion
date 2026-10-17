@@ -1,9 +1,4 @@
-﻿using System.IO;
-using CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged;
-using Microsoft.Xna.Framework;
-using Terraria;
-using Terraria.DataStructures;
-using Terraria.ID;
+﻿using Terraria;
 using Terraria.ModLoader;
 
 namespace CalamityExpansion
@@ -15,16 +10,6 @@ namespace CalamityExpansion
 	public class CalamityExpansion : Mod
 	{
 		/// <summary>
-		/// 本模组的封包类型（每个字节一个类型，写在包体最前面）
-		/// </summary>
-		internal enum CeMessage : byte
-		{
-			/// <summary>
-			/// PvP 命中请求生成一枚星璇火箭：客户端 → 服务端。
-			/// 包体：owner(byte) + 位置(x,y: single) + 速度(x,y: single) + 伤害(int)
-			/// </summary>
-			SniperScopePvPRocket = 1,
-		}		/// <summary>
 		/// 模组单例（由 Load 填充），供工程内静态代码取 <c>Assets</c> 等实例成员
 		/// </summary>
 		public static CalamityExpansion Instance;
@@ -78,72 +63,6 @@ namespace CalamityExpansion
 		private void FindMod()
 		{
 			ModLoader.TryGetMod("GravityDontFlipScreen", out gravityDontFlipScreen);
-		}
-		/// <summary>
-		/// 封包入口。目前只有一条：PvP 命中时的星璇火箭请求。
-		/// <para>
-		/// 为什么 PvP 需要走服务端：狙击镜EX 的命中钩子（<c>GlobalProjectile.OnHitPlayer</c>）跑在
-		/// **被打中那名玩家的客户端**（<c>Player.Hurt</c> 只对本机玩家调用），而原版只在
-		/// 「弹幕 owner == 本机」的客户端才同步新生成的弹幕——在那个客户端直接生成，别的玩家看不到。
-		/// 所以由被打方客户端发一条请求给服务端，服务端校验后生成，原版会广播给所有客户端。
-		/// </para>
-		/// </summary>
-		public override void HandlePacket(BinaryReader reader, int whoAmI)
-		{
-			CeMessage message = (CeMessage)reader.ReadByte();
-			switch (message)
-			{
-				case CeMessage.SniperScopePvPRocket:
-					HandleSniperScopePvPRocket(reader, whoAmI);
-					break;
-			}
-		}
-		/// <summary>
-		/// 服务端处理「PvP 星璇火箭」请求：校验被指定的 owner，然后生成弹幕（原版会自动同步给所有客户端）。
-		/// 客户端收到同一条包不会有动作（服务端生成后本来就会广播真正的生成包）。
-		/// </summary>
-		private void HandleSniperScopePvPRocket(BinaryReader reader, int whoAmI)
-		{
-			if (Main.netMode != NetmodeID.Server)
-			{
-				return;
-			}
-			int ownerIndex = reader.ReadByte();
-			Vector2 position = new Vector2(reader.ReadSingle(), reader.ReadSingle());
-			Vector2 velocity = new Vector2(reader.ReadSingle(), reader.ReadSingle());
-			int damage = reader.ReadInt32();
-			if (ownerIndex < 0 || ownerIndex >= Main.maxPlayers || whoAmI < 0 || whoAmI >= Main.maxPlayers)
-			{
-				return;
-			}
-			// owner 必须真的戴着狙击镜EX——按饰品槽查，因为专用服务器不跑 UpdateAccessory，
-			// ModPlayer 上的 sniperScopeEX 标记在服务端不可靠
-			Player attacker = Main.player[ownerIndex];
-			if (!attacker.active || !HasSniperScopeEquipped(attacker))
-			{
-				return;
-			}
-			if (damage <= 0 || damage > 1000000)
-			{
-				return;   // 客户端传来的伤害做个上界保护
-			}
-			Projectile.NewProjectile(new EntitySource_Misc("CalamityExpansion:SniperScopeEXPvPRocket")
-				, position, velocity, ProjectileID.VortexBeaterRocket, damage, 0f, ownerIndex);
-		}
-		/// <summary>
-		/// 该玩家身上是否戴着狙击镜EX（饰品槽 armor[3..9]；不依赖 ModPlayer 标记，服务端也能用）
-		/// </summary>
-		internal static bool HasSniperScopeEquipped(Player player)
-		{
-			int scopeType = ModContent.ItemType<SniperScopeEX>();
-			for (int i = 3; i <= 9; i++)
-			{
-				if (player.armor[i].type == scopeType)
-				{
-					return true;
-				}
-			}
-			return false;
 		}
 	}
 }

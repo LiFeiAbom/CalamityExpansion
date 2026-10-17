@@ -11,16 +11,17 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
     /// 属性（用户 2026-10-17 口述）：**+22% 远程伤害 / +22% 远程暴击率 / +22% 远程弹幕飞行速度 /
     /// 40% 概率不消耗弹药 / +50 点远程护甲穿透**；额外：
     /// ① 魔法箭袋效果；② **饰品可见时**获得侦察镜（Recon Scope）的缩放能力；
-    /// ③ 射出箭矢时 50% 概率**额外**射出一发夜明箭，射出子弹时 50% 概率**额外**射出一发夜明弹；
-    /// ④ 远程弹幕每命中目标一次，发射一枚星璇火箭。
+    /// ③ 射出箭矢时 50% 概率**额外**射出一发夜明箭，射出子弹时 50% 概率**额外**射出一发夜明弹。
     /// <para>
     /// 全部用**原版弹幕**，本工程不新增弹幕：夜明箭 <c>ProjectileID.MoonlordArrow</c>(639)、
-    /// 夜明弹 <c>ProjectileID.MoonlordBullet</c>(638)、星璇火箭 <c>ProjectileID.VortexBeaterRocket</c>(616)。
+    /// 夜明弹 <c>ProjectileID.MoonlordBullet</c>(638)。
+    /// ⚠️ 原先的「远程命中发射星璇火箭」（<c>ProjectileID.VortexBeaterRocket</c>）已于 2026-10-17
+    /// 按用户要求**整体删除**——火箭爆炸太频繁、太卡；连带的 PvP 封包与全局弹幕钩子也一并撤掉了。
     /// </para>
     /// <para>
-    /// 落点：三围、魔法箭袋、缩放直接在 <see cref="UpdateAccessory"/>；省弹 / 弹速 / 额外弹药 / 命中火箭
+    /// 落点：三围、魔法箭袋、缩放直接在 <see cref="UpdateAccessory"/>；省弹 / 弹速 / 额外弹药
     /// 分别落在 <see cref="CalamityExpansionPlayer"/> 的 <c>CanConsumeAmmo</c> / <c>ModifyShootStats</c> /
-    /// <c>Shoot</c> / <c>OnHitNPCWithProj</c>，靠每帧置位的 <c>sniperScopeEX</c> 标记触发。
+    /// <c>Shoot</c>，靠每帧置位的 <c>sniperScopeEX</c> 标记触发。
     /// </para>
     /// </summary>
     internal class SniperScopeEX : ModItem

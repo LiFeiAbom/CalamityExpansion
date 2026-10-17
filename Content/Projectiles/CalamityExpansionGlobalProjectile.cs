@@ -36,12 +36,9 @@ namespace CalamityExpansion.Content.Projectiles
         /// 弹幕命中玩家（PvP）：先挡掉敌方弹幕（<c>hostile</c>）与 owner 越界的情况，
         /// 再把施加交给 <see cref="CalamityExpansionPlayer.TryApplyDaybreakEXOnPvP"/>
         /// （内含近战分类过滤与「装备了战士徽章EX」判据）。
-        /// 随后交给 <see cref="CalamityExpansionPlayer.TrySpawnVortexRocketOnPvP"/>：
-        /// 狙击镜EX 的「远程命中发射星璇火箭」在 PvP 下走同一条判据。
         /// <para>
         /// ⚠️ 这条钩子的调用链是 <c>Player.Hurt</c> → <c>CombinedHooks.OnHitByProjectile</c> →
-        /// <c>ProjectileLoader.OnHitPlayer</c>（2026-10-17 IL 实查），即**在被打中那名玩家的客户端**结算；
-        /// 而 <c>Player.Hurt</c> 只对本机玩家跑，所以每次 PvP 命中只会有一个客户端生成火箭，不会重复。
+        /// <c>ProjectileLoader.OnHitPlayer</c>（2026-10-17 IL 实查），即**在被打中那名玩家的客户端**结算。
         /// </para>
         /// </summary>
         public override void OnHitPlayer(Projectile projectile, Player target, Player.HurtInfo info)
@@ -52,7 +49,6 @@ namespace CalamityExpansion.Content.Projectiles
             }
             Player attacker = Main.player[projectile.owner];
             CalamityExpansionPlayer.TryApplyMeleeHitDebuffsOnPvP(attacker, target, projectile.DamageType);
-            CalamityExpansionPlayer.TrySpawnVortexRocketOnPvP(attacker, target, projectile);
         }
     }
 }

@@ -34,7 +34,7 @@ namespace CalamityExpansion.Players
         public bool rangerEmblemEX = false;
         /// <summary>
         /// 玩家当前是否装备着狙击镜EX（每帧由饰品置位，换代即失效）——
-        /// 供省弹、弹速、额外夜明弹药、命中发射星璇火箭四个钩子读取
+        /// 供省弹、弹速、额外夜明弹药三个钩子读取
         /// </summary>
         public bool sniperScopeEX = false;
         /// <summary>
@@ -72,91 +72,8 @@ namespace CalamityExpansion.Players
         public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
             ApplyMeleeHitDebuffs(target, hit.DamageType);
-            SpawnVortexRocketOnRangedHit(proj, target, hit);
         }
 
-        /// <summary>
-        /// 远程弹幕每命中目标一次，发射一枚**原版**星璇火箭（<c>ProjectileID.VortexBeaterRocket</c> = 616，
-        /// 即星璇机枪那枚火箭；本工程不新增弹幕）。
-        /// <para>
-        /// 判据：装备了狙击镜EX + 这一击算远程 + 不是火箭自己打出来的（否则火箭命中会再生成火箭，无限链）。
-        /// 只在弹幕拥有者的客户端生成（<c>Main.myPlayer == Player.whoAmI</c>），原版会负责同步。
-        /// 伤害取**发射它的那枚弹幕**的 <c>damage</c>（不按实际打出的 damageDone，免得暴击/减伤把它放大）。
-        /// </para>
-        /// </summary>
-        private void SpawnVortexRocketOnRangedHit(Projectile proj, NPC target, NPC.HitInfo hit)
-        {
-            if (!sniperScopeEX || !hit.DamageType.CountsAsClass(DamageClass.Ranged))
-            {
-                return;
-            }
-            if (proj.type == ProjectileID.VortexBeaterRocket || Player.whoAmI != Main.myPlayer)
-            {
-                return;
-            }
-            SpawnVortexRocket(Player, target, proj.damage);
-        }
-        /// <summary>
-        /// PvP 路的「远程命中发射星璇火箭」：由
-        /// <c>CalamityExpansionGlobalProjectile.OnHitPlayer</c>（弹幕打玩家）调用，
-        /// 判据与打敌怪那条完全一致，只是目标换成玩家。
-        /// <para>
-        /// 多人口径：本方法在**被命中玩家的客户端**执行（<c>Player.Hurt</c> 只对本机玩家跑），
-        /// 因此每次 PvP 命中只会有一次生成；生成出来的火箭 owner 仍是攻击方
-        /// （<c>attacker.whoAmI</c>），tModLoader/原版会把它同步给服务端与其它客户端。
-        /// 服务端不跑本方法（那里没有玩家结算）。
-        /// </para>
-        /// </summary>
-        public static void TrySpawnVortexRocketOnPvP(Player attacker, Player target, Projectile projectile)
-        {
-            if (attacker is null || !attacker.active || !target.active)
-            {
-                return;
-            }
-            if (Main.netMode == NetmodeID.Server)
-            {
-                return;
-            }
-            if (!attacker.GetModPlayer<CalamityExpansionPlayer>().sniperScopeEX)
-            {
-                return;
-            }
-            if (!projectile.DamageType.CountsAsClass(DamageClass.Ranged)
-                || projectile.type == ProjectileID.VortexBeaterRocket)
-            {
-                return;   // 非远程不生成；火箭自己的命中也不再生成（防无限链）
-            }
-            // 多人：本方法跑在「被打中那名玩家」的客户端，而原版只让 owner 本机同步新弹幕，
-            // 所以这里不能直接生成——发包给服务端，由服务端校验后生成并广播。
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-            {
-                Vector2 direction = (target.Center - attacker.Center).SafeNormalize(-Vector2.UnitY);
-                Vector2 spawnPosition = attacker.Center + direction * 24f;
-                Vector2 velocity = direction * 14f;
-                ModPacket packet = CalamityExpansion.Instance.GetPacket();
-                packet.Write((byte)CalamityExpansion.CeMessage.SniperScopePvPRocket);
-                packet.Write((byte)attacker.whoAmI);
-                packet.Write(spawnPosition.X);
-                packet.Write(spawnPosition.Y);
-                packet.Write(velocity.X);
-                packet.Write(velocity.Y);
-                packet.Write(projectile.damage);
-                packet.Send();
-                return;
-            }
-            SpawnVortexRocket(attacker, target, projectile.damage);
-        }
-        /// <summary>
-        /// 生成一枚原版星璇火箭：从拥有者身上朝目标方向打出，伤害取来源弹幕的 <c>damage</c>。
-        /// 敌怪路与 PvP 路共用。
-        /// </summary>
-        private static void SpawnVortexRocket(Player owner, Entity target, int damage)
-        {
-            Vector2 direction = (target.Center - owner.Center).SafeNormalize(-Vector2.UnitY);
-            Vector2 spawnPosition = owner.Center + direction * 24f;
-            Projectile.NewProjectile(owner.GetSource_OnHit(target), spawnPosition, direction * 14f
-                , ProjectileID.VortexBeaterRocket, damage, 0f, owner.whoAmI);
-        }
         /// <summary>
         /// 敌怪路的施加口：只有近战命中才附加（按 <c>DamageClass.Melee</c> 过滤命中类型，
         /// 远程/魔法/召唤/无职业命中一律不加）。两个饰品各管自己的减益——
@@ -358,7 +275,7 @@ namespace CalamityExpansion.Players
             }
             else
             {
-                return true;   // 火箭 / 飞镖 / 溶液等其它弹药不参与
+                return true;   // 其它弹药（火箭/飞镖/溶液等）不参与
             }
             Vector2 direction = velocity.SafeNormalize(Vector2.UnitX);
             Vector2 offset = new Vector2(-direction.Y, direction.X) * 8f;

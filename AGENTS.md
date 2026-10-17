@@ -12,8 +12,10 @@
   ⑦ 第三张染色（2026-10-17 追加）：**游侠徽章 RangerEmblemEX** 贴图按星旋盔甲色系染好（§3.3 第三条）；
   ⑧ 第五批（2026-10-17 追加）：**游侠徽章EX**（远程饰品 + 星旋绿青渐变稀有度）按用户口述落地（§5.5）。
   ⑨ 第六批（2026-10-17 追加）：**狙击镜EX**（§5.6）——复合造型贴图 + 22% 三围/40% 省弹/50 穿透 +
-  魔法箭袋 + 侦察镜缩放 + 额外夜明箭弹 + 命中发射星璇火箭（全部原版弹幕）；同时删掉游侠徽章EX 的远程攻速、
-  删掉四张参考图与根目录 `Daybroken.png`；并补齐 **PvP/多人适配**（本工程第一次用 `ModPacket`）。
+  魔法箭袋 + 侦察镜缩放 + 额外夜明箭弹（全部原版弹幕）；同时删掉游侠徽章EX 的远程攻速、
+  删掉四张参考图与根目录 `Daybroken.png`。
+  ⚠️ 同一天稍后**按用户要求删掉了「命中发射星璇火箭」**（爆炸太频繁、卡顿），连同为此加的
+  PvP 封包与全局弹幕钩子一起撤除（详见 §5.6）。
 - **当前状态**：C# 编译 **0 警告 0 错误**；`CheckImplicitTextures.ps1` 16 个类全命中、`CheckResources.ps1` 27 条全命中；
   `.tmod` 已打包进 `…\tModLoader\Mods\`。
 - **实测状态**：破晓EX 那一批用户进游戏测过、回「没有问题」；**烈火手套EX / 燃烧IV / 战士EX 档尚未进游戏实测**。
@@ -525,33 +527,27 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
     箭类 50% 额外生成 `ProjectileID.MoonlordArrow`(639)，子弹类 50% 额外生成 `ProjectileID.MoonlordBullet`(638)；
     额外那发与原弹垂直错开 8 像素，避免完全重叠。**是「多射一发」，不是把原弹药换成夜明弹药**
     （用户 2026-10-17 先说要替换、随后改成额外射出一发）。
-  - **命中发射星璇火箭**：`OnHitNPCWithProj` 里，装备本饰品 + 这一击算 `DamageClass.Ranged` 时，
-    生成 `ProjectileID.VortexBeaterRocket`(616)——就是星璇机枪那枚原版火箭。伤害取
-    发射它的那枚弹幕的 `proj.damage`（不取实际打出的 damageDone，避免暴击/减伤放大）。
-    ⚠️ **必须挡 `proj.type == ProjectileID.VortexBeaterRocket`**，否则火箭命中会再生火箭、无限链。
-    只在 `Main.myPlayer == Player.whoAmI` 端生成，原版负责同步。
+  - ~~**命中发射星璇火箭**~~ **已于 2026-10-17 按用户要求整体删除**：用户实测「频繁的火箭爆炸太卡了」。
+    随之删除的还有：`OnHitNPCWithProj` 里的生成调用、`CalamityExpansionPlayer` 里的
+    `SpawnVortexRocketOnRangedHit` / `TrySpawnVortexRocketOnPvP` / `SpawnVortexRocket` 三个方法、
+    `CalamityExpansion` 里的整套封包（`CeMessage` / `HandlePacket` / `HandleSniperScopePvPRocket` /
+    `HasSniperScopeEquipped`）、`GlobalProjectile.OnHitPlayer` 里那一行调用，以及 tooltip 的那一行。
+    **本工程目前没有 `ModPacket` 线路**，`CalamityExpansion.cs` 回到「单例 + 着色器加载」的原始形态。
 - **省弹 / 弹速**：与游侠徽章EX 共用 `CalamityExpansionPlayer.CanConsumeAmmo` / `ModifyShootStats`
   （两件同时装备时省弹各自独立掷一次、弹速乘算叠加）。
-- **PvP / 多人适配（2026-10-17 补齐）**：
-  - **打敌怪**：`OnHitNPCWithProj` 的生成只在弹幕拥有者客户端发生（IL 实查 `Projectile.Damage`：
-    `owner != Main.myPlayer` 会直接跳过整段 NPC 伤害逻辑），所以火箭天然只有一份，且 owner == 本机 → 原版自动同步。
-  - **打玩家（PvP）**：`GlobalProjectile.OnHitPlayer` 的调用链是
-    `Player.Hurt` → `CombinedHooks.OnHitByProjectile` → `ProjectileLoader.OnHitPlayer`，
-    **只跑在被打中那名玩家的客户端**；而 `Projectile.NewProjectile` 只在 `owner == Main.myPlayer` 的客户端发包同步
-    （IL 实查 `Projectile.NewProjectile` IL_0715）。故 PvP 不能在原地生成，改成：
-    被打方客户端发 `CalamityExpansion.CeMessage.SniperScopePvPRocket`（owner + 位置 + 速度 + 伤害）给服务端 →
-    服务端校验 owner 确实戴着狙击镜EX（**查 `armor[3..9]` 而不是 ModPlayer 标记**，专用服务器不跑 `UpdateAccessory`）→
-    服务端 `Projectile.NewProjectile`（owner = 攻击者）→ 原版广播给所有客户端（含被打方，看得见）。
-    伤害做了 1..1,000,000 的上界保护，索引越界直接丢弃。
-  - **纯本地项**：省弹、弹速、额外夜明箭/弹、三围加成都在射击方客户端算，天然各端一致；
-    额外那发夜明弹的 owner 就是自己，正常同步。魔法箭袋与 `player.scope` 只影响本机操作手感，设给远端玩家也无副作用。
+- **PvP / 多人口径（火箭删除后）**：剩下所有效果都只依赖射击方本地计算——
+  省弹、弹速、额外夜明箭/弹、三围加成都在射击方客户端算，额外那发的 owner 就是自己、正常同步；
+  魔法箭袋与 `player.scope` 只影响本机手感，设给远端玩家无副作用。
+  供以后参考的两条 IL 结论仍然有效：① `Projectile.Damage` 里 `owner != Main.myPlayer` 会跳过整段 NPC 伤害；
+  ② `Projectile.NewProjectile` 只在 `owner == Main.myPlayer` 的客户端发包同步；
+  ③ `GlobalProjectile.OnHitPlayer` 跑在被打中那名玩家的客户端（`Player.Hurt` 只对本机玩家跑）。
+  —— 以后若再要在 PvP 里生成弹幕，仍需走「被打方发请求、服务端生成」那条路。
 - **稀有度**：沿用 `RangerEXRarity`（星旋绿青渐变字色）。
 - ⚠️ **待用户点名**：① 配方——用户没给，现按 EX 八味结构推了一条（侦察镜 `ReconScope` + 石巨人之眼 +
   五种魂各 25 + 星旋碎片 50 @ 远古操纵机），要改说一声；② 价值 15 金、英文名 `Sniper Scope EX`；
   ③ 额外夜明弹药的伤害沿用本次射击的伤害（没有单独加成）。
-- **待实测（2026-10-17）**：① 单人：夜明箭/弹是否 50% 概率双发、火箭是否每次远程命中都出、缩放是否只有可见时生效；
-  ② 多人：额外夜明弹在其它客户端是否可见、火箭生成是否只出现一份（不漏不重）；
-  ③ PvP：被打方是否看到火箭、攻击方是否也看到、火箭对玩家是否只结算一次伤害、服务端日志有无封包异常。
+- **待实测（2026-10-17）**：① 单人：夜明箭/弹是否 50% 概率双发、缩放是否只有可见时生效、命中时是否不再有火箭；
+  ② 多人：额外夜明弹在其它客户端是否可见、卡顿是否消失。
 
 ## 6. 工作流
 
