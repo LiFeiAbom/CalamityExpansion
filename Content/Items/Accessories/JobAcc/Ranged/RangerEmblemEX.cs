@@ -60,21 +60,21 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
             player.GetModPlayer<CalamityExpansionPlayer>().rangerEmblemEX = true;
         }
         /// <summary>
-        /// 配方（照战士徽章EX 的八味结构换职业）：游侠徽章 + 石巨人之眼 + 五种魂各 25 + **星旋碎片 50**，
-        /// 在远古操纵机（原版 LunarCraftingStation）合成。材料与站台全是原版内容，不需要软引用。
+        /// 配方（2026-10-17 用户改过）：游侠徽章 + **神圣锭 15** + 五种魂各 25，在**秘银砧**（原版 MythrilAnvil）合成。
+        /// （原来的「石巨人之眼 + 星旋碎片 50」被 15 个神圣锭取代，站台也从远古操纵机改成秘银砧。）
+        /// 材料与站台全是原版内容，不需要软引用。
         /// </summary>
         public override void AddRecipes()
         {
             CreateRecipe()
                 .AddIngredient(ItemID.RangerEmblem)
-                .AddIngredient(ItemID.EyeoftheGolem)   // 石巨人之眼（原版字段名是小写 the）
+                .AddIngredient(ItemID.HallowedBar, 15)   // 神圣锭 ×15（取代原来的石巨人之眼 + 星旋碎片 50）
                 .AddIngredient(ItemID.SoulofLight, 25)
                 .AddIngredient(ItemID.SoulofNight, 25)
                 .AddIngredient(ItemID.SoulofFright, 25)
                 .AddIngredient(ItemID.SoulofMight, 25)
                 .AddIngredient(ItemID.SoulofSight, 25)
-                .AddIngredient(ItemID.FragmentVortex, 50)   // 星旋碎片（战士徽章EX 用的是日曜碎片）
-                .AddTile(TileID.LunarCraftingStation)
+                .AddTile(TileID.MythrilAnvil)   // 秘银砧（原为远古操纵机）
                 .Register();
         }
     }

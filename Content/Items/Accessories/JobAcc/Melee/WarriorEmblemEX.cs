@@ -46,21 +46,21 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Melee
             player.GetModPlayer<CalamityExpansionPlayer>().warriorEmblemEX = true;
         }
         /// <summary>
-        /// 配方：战士徽章 + 石巨人之眼 + 五种魂各 25 + 日曜碎片 50，在远古操纵机（原版 LunarCraftingStation）合成。
-        /// 八味材料与站台全是原版内容，故不需要走 TryGetMod 软引用。
+        /// 配方（2026-10-17 用户改过）：战士徽章 + **神圣锭 15** + 五种魂各 25，在**秘银砧**（原版 MythrilAnvil）合成。
+        /// （原来的「石巨人之眼 + 日曜碎片 50」被 15 个神圣锭取代，站台也从远古操纵机改成秘银砧。）
+        /// 材料与站台全是原版内容，故不需要走 TryGetMod 软引用。
         /// </summary>
         public override void AddRecipes()
         {
             CreateRecipe()
                 .AddIngredient(ItemID.WarriorEmblem)
-                .AddIngredient(ItemID.EyeoftheGolem)   // 石巨人之眼（Eye of the Golem，原版字段名是小写 the）
+                .AddIngredient(ItemID.HallowedBar, 15)   // 神圣锭 ×15（取代原来的石巨人之眼 + 日曜碎片 50）
                 .AddIngredient(ItemID.SoulofLight, 25)
                 .AddIngredient(ItemID.SoulofNight, 25)
                 .AddIngredient(ItemID.SoulofFright, 25)
                 .AddIngredient(ItemID.SoulofMight, 25)
                 .AddIngredient(ItemID.SoulofSight, 25)
-                .AddIngredient(ItemID.FragmentSolar, 50)
-                .AddTile(TileID.LunarCraftingStation)
+                .AddTile(TileID.MythrilAnvil)   // 秘银砧（原为远古操纵机）
                 .Register();
         }
     }

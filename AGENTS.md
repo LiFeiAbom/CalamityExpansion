@@ -393,7 +393,8 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
   全部取自这两件饰品的贴图配色），写法与中子档同源（每帧读 `GlobalTimeWrappedHourly`，只是从两色脉动升级为多色循环，
   循环插值照灾厄 MulticolorLerp 口径）。贴图 28×28。价值 15 金
   （**我按 JobAcc 饰品量级暂定，用户未点名**）。
-- **配方**（用户口述）：战士徽章 + 石巨人之眼 + 光明/暗影/恐惧/力量/视域之魂各 25 + 日曜碎片 50 @ 远古操纵机
+- **配方（2026-10-17 用户改过）**：战士徽章 + **神圣锭 `HallowedBar` ×15** + 光明/暗影/恐惧/力量/视域之魂各 25
+  @ **秘银砧**（`TileID.MythrilAnvil`）。原来的「石巨人之眼 + 日曜碎片 50」已被 15 个神圣锭取代，站台也从远古操纵机改了。
   （`ItemID.WarriorEmblem` / `ItemID.EyeoftheGolem` / `SoulofLight|Night|Fright|Might|Sight` / `ItemID.FragmentSolar`，
   站台 `TileID.LunarCraftingStation` = 412）。八味材料全是原版，故**不走 TryGetMod 软引用**。
   ⚠️ 用户原话写的是「战术徽章」，本机全盘查无此物（原版、灾厄、大修、本地化都没有），按「战士徽章」落地。
@@ -506,8 +507,9 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
     `Player.ItemCheck_Shoot`，位置在初速算好之后、`Projectile.NewProjectile` 之前，正是弹药弹速该改的地方。
     判据 = 装备了本饰品 + `item.useAmmo != AmmoID.None` + `CountsAsClass(DamageClass.Ranged)`
     ——即**只抬消耗弹药的远程武器**，不吃弹药的远程武器与非远程职业不动。
-- **配方（模仿战士徽章EX 的八味结构换职业）**：游侠徽章 `RangerEmblem` + 石巨人之眼 `EyeoftheGolem`
-  + 光明/暗影/恐惧/力量/视域之魂各 25 + **星旋碎片 `FragmentVortex` 50** @ 远古操纵机（`TileID.LunarCraftingStation`）。
+- **配方（2026-10-17 用户改过）**：游侠徽章 `RangerEmblem` + **神圣锭 `HallowedBar` ×15**
+  + 光明/暗影/恐惧/力量/视域之魂各 25 @ **秘银砧**（`TileID.MythrilAnvil`）。
+  原来的「石巨人之眼 + 星旋碎片 50」已被 15 个神圣锭取代，站台也从远古操纵机改了。
   全是原版材料，不需要软引用。
 - **稀有度**：`Content/Rarities/RangerEXRarity.cs`（用户 2026-10-17 指定「稀有度颜色和星旋盔甲的色系对应」）——
   四档全取自带进工程的星旋胸甲像素：深绿 `(24,93,66)` → 绿 `(47,184,131)` → 亮绿 `(34,221,151)` → 青 `(67,255,255)`，
