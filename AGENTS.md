@@ -8,6 +8,8 @@
   ③ 第四批：**烈火手套EX + 燃烧IV**（§3.4 / §5.4）——含 MiracleBlight 溶解视觉的全复刻（着色器 + 渲染基建）、配方、PvP 与多人适配；
   ④ **战士EX 稀有度**（§5.3 / §5.4）：橙红渐变字色，两件战士饰品共用；
   ⑤ 工具：`Tools/ReadVanillaIL.ps1`（用 Mono.Cecil 读 tModLoader.dll 查原版钩子/数值/IL，非 ASCII 注释必须配 BOM）。
+  ⑥ 文案（2026-10-17 追加）：两件近战饰品的 tooltip **不再列减益数值**，只留「近战命中会造成X」一句（见 §5.4 文案条）；
+  ⑦ 第三张染色（2026-10-17 追加）：**游侠徽章 RangerEmblemEX** 贴图按星旋盔甲色系染好（§3.3 第三条），暂无 .cs。
 - **当前状态**：C# 编译 **0 警告 0 错误**；`CheckImplicitTextures.ps1` 16 个类全命中、`CheckResources.ps1` 27 条全命中；
   `.tmod` 已打包进 `…\tModLoader\Mods\`。
 - **实测状态**：破晓EX 那一批用户进游戏测过、回「没有问题」；**烈火手套EX / 燃烧IV / 战士EX 档尚未进游戏实测**。
@@ -177,6 +179,25 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
   `FireGauntletEX_shaded_red.png`（整只渐变烈火红的中间版）、`FireGauntletEX_flat_red.png`（整只纯色，已作废）、
   `compare_base.png`（本轮三联对比）。临时目录可能被系统清理，要长期留档得说一声搬进工程。
   该贴图目前**没有对应 .cs**，与（已被用户删掉的）`BeetleGlove.png` 同为待规格的 WIP 素材。
+
+**第三张染色（2026-10-17，游侠徽章 RangerEmblemEX）**
+
+- **素材**：`Content/Items/Accessories/JobAcc/Ranged/Ranger_Emblem.webp`（28×28，与战士徽章同样 2× 口径）
+  + 配色参考 `Ranged/Vortex_armor.webp`（30×44 星旋胸甲）。输出 `Ranged/RangerEmblemEX.png`（28×28，RGBA，11 色）。
+  两张 .webp **留在原位当参考图**（用户没点名删，构建对它们无警告）。目前**没有 .cs**，与 `BeetleGlove.png` 同为 WIP。
+- **星旋盔甲取色**（从 `Vortex_armor.webp` 直接统计）：底 `(39,24,46)` 深紫、深绿 `(24,93,66)`、
+  绿 `(47,184,131)`、亮绿 `(34,221,151)`、青 `(67,255,255)`、白高光 `(255,255,255)`、
+  板件灰 `(68,68,68)/(108,108,108)/(134,134,134)/(152,152,152)/(176,176,176)`。
+- **口径**：与战士徽章同一条——**3 个灰盘色阶 `(32,32,32)/(64,64,64)/(84,84,84)` 一个像素都不动**（输出里三档数量
+  160/156/48 与原件完全一致），其余 7 个有彩色重映射。映射表：
+  `(51,33,5)→(26,18,34)`（暗部走星旋底色的深紫）、`(96,57,9)→(20,92,64)`、
+  `(161,161,161)→(47,184,131)`（银环主体=盔甲绿）、`(223,223,223)→(130,245,200)`（银环高光=薄荷绿）、
+  `(231,153,28)→(34,221,151)`、`(236,214,51)→(67,255,255)`、`(255,249,209)→(180,255,255)`
+  ——即箭身走「深绿 → 亮绿 → 青 → 淡青」的发光阶，与星旋"绿色甲片 + 青色能量"的角色分工一致。
+- ⚠️ **走过的弯路（别再机械按亮度排）**：先试过「7 个有彩色按感知亮度排序 → 依次塞进 7 档星旋色阶」（版本 A/B/D），
+  结果银环的高光段（223）拿到了最亮档，抢掉了箭头的层次，箭身与环又同为绿、在小尺寸下糊成一团。
+  改成**按"环 / 箭"分色**（H 版：环=绿+薄荷，箭=绿→青）后箭头才立得住。对比图在
+  `%TEMP%\ce_ranged_work\`（`compare.png` / `compare2.png` / `compare3.png` / `style_check.png`）。
 
 ### 3.4 第四批（2026-10-17，烈火手套EX + 燃烧IV）
 
@@ -495,9 +516,10 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
 - **贴图尺寸口径（本批已按用户素材定，别当成漏做）**：用户给的素材（战士徽章 28×28、日曜胸甲 38×28、破晓图标 32×32）
   **全是 2× 图**（每个像素都是 2×2 方块，与 `BeetleGlove.png` 26×30 = 13×15 翻倍同一口径）。
   本批一律「不缩放、只换色」。若哪天发现游戏里物品图标偏大，就是这条口径要改：把素材减半到 1× 再染色。
-- **WIP（未点名，别当成漏做）**：`Content/Items/Accessories/JobAcc/Melee/` 下有
-  `BeetleGlove.png`（甲虫手套）与 `FireGauntletEX.png`（烈火手套EX，2026-10-16 已染成日曜红，见 §3.3）
-  两张**没有对应 .cs** 的贴图，等用户给规格再落地。JobAcc 目录结构沿用姊妹工程 `CalamityDemutation`
+- **WIP（未点名，别当成漏做）**：`Content/Items/Accessories/JobAcc/Melee/BeetleGlove.png`（甲虫手套）
+  仍然**没有对应 .cs**，等用户给规格再落地；`Ranged/` 下 2026-10-17 新增
+  `Ranger_Emblem.webp`（原素材）× `Vortex_armor.webp`（星旋胸甲配色参考）+ 已染好的 `RangerEmblemEX.png`
+  （同样没有 .cs，见 §3.3 第三条）。JobAcc 目录结构沿用姊妹工程 `CalamityDemutation`
   （Melee / Magic / Ranged / Rogue / Summon）。
 - **工程根目录的 `Daybroken.png`**：破晓EX 图标的参考副本，已入库为 `Content/Buffs/NegativeBuffs/DaybreakEX.png`；
   根目录那份用户没点名要删，暂时留着（要清理说一声即可）。
