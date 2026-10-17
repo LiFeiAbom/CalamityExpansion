@@ -31,7 +31,6 @@ Items: {
 			Melee knockback is doubled, melee weapon size +20%
 			Allows autoswing for melee weapons and whips
 			Melee hits inflict Hellfire IV
-			Hellfire IV: the target loses 900 life per second, has 75 less defense, and takes 15% more damage
 			'''
 	}
 
@@ -70,7 +69,6 @@ Items: {
 			18% increased melee critical strike chance
 			18% increased melee attack speed
 			Melee hits inflict Daybreak EX (on enemies and players alike)
-			Daybreak EX: the target loses 750 life per second, has 50 less defense, and takes 10% more damage
 			'''
 	}
 }
