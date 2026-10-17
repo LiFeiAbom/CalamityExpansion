@@ -61,6 +61,18 @@ Items: {
 			'''
 	}
 
+	RangerEmblemEX: {
+		DisplayName: Ranger Emblem EX
+		Tooltip:
+			'''
+			18% increased ranged damage
+			18% increased ranged critical strike chance
+			18% increased ranged attack speed
+			18% increased ammo velocity
+			18% chance not to consume ammo
+			'''
+	}
+
 	WarriorEmblemEX: {
 		DisplayName: Warrior Emblem EX
 		Tooltip:
@@ -76,6 +88,7 @@ Items: {
 Rarities: {
 	NeutronRarity.DisplayName: Neutron
 	WarriorEXRarity.DisplayName: Warrior EX
+	RangerEXRarity.DisplayName: Ranger EX
 }
 
 Projectiles: {

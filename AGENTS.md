@@ -9,7 +9,8 @@
   ④ **战士EX 稀有度**（§5.3 / §5.4）：橙红渐变字色，两件战士饰品共用；
   ⑤ 工具：`Tools/ReadVanillaIL.ps1`（用 Mono.Cecil 读 tModLoader.dll 查原版钩子/数值/IL，非 ASCII 注释必须配 BOM）。
   ⑥ 文案（2026-10-17 追加）：两件近战饰品的 tooltip **不再列减益数值**，只留「近战命中会造成X」一句（见 §5.4 文案条）；
-  ⑦ 第三张染色（2026-10-17 追加）：**游侠徽章 RangerEmblemEX** 贴图按星旋盔甲色系染好（§3.3 第三条），暂无 .cs。
+  ⑦ 第三张染色（2026-10-17 追加）：**游侠徽章 RangerEmblemEX** 贴图按星旋盔甲色系染好（§3.3 第三条）；
+  ⑧ 第五批（2026-10-17 追加）：**游侠徽章EX**（远程饰品 + 星旋绿青渐变稀有度）按用户口述落地（§5.5）。
 - **当前状态**：C# 编译 **0 警告 0 错误**；`CheckImplicitTextures.ps1` 16 个类全命中、`CheckResources.ps1` 27 条全命中；
   `.tmod` 已打包进 `…\tModLoader\Mods\`。
 - **实测状态**：破晓EX 那一批用户进游戏测过、回「没有问题」；**烈火手套EX / 燃烧IV / 战士EX 档尚未进游戏实测**。
@@ -184,7 +185,8 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
 
 - **素材**：`Content/Items/Accessories/JobAcc/Ranged/Ranger_Emblem.webp`（28×28，与战士徽章同样 2× 口径）
   + 配色参考 `Ranged/Vortex_armor.webp`（30×44 星旋胸甲）。输出 `Ranged/RangerEmblemEX.png`（28×28，RGBA，11 色）。
-  两张 .webp **留在原位当参考图**（用户没点名删，构建对它们无警告）。目前**没有 .cs**，与 `BeetleGlove.png` 同为 WIP。
+  两张 .webp **留在原位当参考图**（用户没点名删，构建对它们无警告）。2026-10-17 当天贴图已配上 .cs，
+  落地成 `RangerEmblemEX`（见 §5.5）。
 - **星旋盔甲取色**（从 `Vortex_armor.webp` 直接统计）：底 `(39,24,46)` 深紫、深绿 `(24,93,66)`、
   绿 `(47,184,131)`、亮绿 `(34,221,151)`、青 `(67,255,255)`、白高光 `(255,255,255)`、
   板件灰 `(68,68,68)/(108,108,108)/(134,134,134)/(152,152,152)/(176,176,176)`。
@@ -444,6 +446,31 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
   工程内其余 `Instance` 用法已逐处复核安全：`EffectLoader`（在 `Mod.Load` 里调）、`BaseHeldProjCE`（运行期）、
   `ConfigSystem.Instance?`（`AutoloadConfig` 阶段已赋值，且全走 `?.`）。
 
+### 5.5 游侠徽章EX（RangerEmblemEX，2026-10-17 第五批）
+
+- **游侠徽章EX**：远程饰品（JobAcc/Ranged）。贴图 = §3.3 第三条那张按星旋盔甲色系染好的
+  `RangerEmblemEX.png`（28×28，灰盘不动、银环走盔甲绿、箭身走绿色→青色发光阶）。
+  属性（用户 2026-10-17 口述）：**+18% 远程伤害 / +18% 远程暴击率 / +18% 远程攻击速度 /
+  +18% 弹药飞行速度 / 18% 概率不消耗弹药**。
+- **落点**（与战士徽章EX 同一套骨架）：
+  - 三围直接写 `player.GetDamage / GetCritChance / GetAttackSpeed(DamageClass.Ranged)`，
+    并给 `CalamityExpansionPlayer.rangerEmblemEX` 置位（`ResetEffects` 每帧复位）。
+  - **省弹**走 `ModPlayer.CanConsumeAmmo`（返回 false = 这一发不扣弹药）：原版只有 20%/25% 那几个
+    固定档的布尔量（`ammoCost80` / `ammoCost75` / `ammoCost99`），没有任意百分比的口子，所以只能走钩子。
+    IL 实查：调用点在 `Player.IsAmmoFreeThisShot`，判定天然只在射击方客户端跑。
+  - **弹速**走 `ModPlayer.ModifyShootStats`（`velocity *= 1.18`）。IL 实查：调用点在
+    `Player.ItemCheck_Shoot`，位置在初速算好之后、`Projectile.NewProjectile` 之前，正是弹药弹速该改的地方。
+    判据 = 装备了本饰品 + `item.useAmmo != AmmoID.None` + `CountsAsClass(DamageClass.Ranged)`
+    ——即**只抬消耗弹药的远程武器**，不吃弹药的远程武器与非远程职业不动。
+- **配方（模仿战士徽章EX 的八味结构换职业）**：游侠徽章 `RangerEmblem` + 石巨人之眼 `EyeoftheGolem`
+  + 光明/暗影/恐惧/力量/视域之魂各 25 + **星旋碎片 `FragmentVortex` 50** @ 远古操纵机（`TileID.LunarCraftingStation`）。
+  全是原版材料，不需要软引用。
+- **稀有度**：`Content/Rarities/RangerEXRarity.cs`（用户 2026-10-17 指定「稀有度颜色和星旋盔甲的色系对应」）——
+  四档全取自带进工程的星旋胸甲像素：深绿 `(24,93,66)` → 绿 `(47,184,131)` → 亮绿 `(34,221,151)` → 青 `(67,255,255)`，
+  每帧循环插值，`CycleSpeed = 0.35` 与战士EX 档同节奏。档位显示名 `Rarities.RangerEXRarity.DisplayName`
+  （中「游侠EX」/ 英 `Ranger EX`）。
+- 价值 15 金（沿用战士徽章EX 口径）；英文名 `Ranger Emblem EX`（沿用 `Warrior Emblem EX` 的命名法）。
+
 ## 6. 工作流
 
 - 编译：`dotnet build -v q -nologo`。**C# 编译本身应为 0 警告 0 错误**（工程警告基线是 0）。
@@ -517,10 +544,10 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
   **全是 2× 图**（每个像素都是 2×2 方块，与 `BeetleGlove.png` 26×30 = 13×15 翻倍同一口径）。
   本批一律「不缩放、只换色」。若哪天发现游戏里物品图标偏大，就是这条口径要改：把素材减半到 1× 再染色。
 - **WIP（未点名，别当成漏做）**：`Content/Items/Accessories/JobAcc/Melee/BeetleGlove.png`（甲虫手套）
-  仍然**没有对应 .cs**，等用户给规格再落地；`Ranged/` 下 2026-10-17 新增
-  `Ranger_Emblem.webp`（原素材）× `Vortex_armor.webp`（星旋胸甲配色参考）+ 已染好的 `RangerEmblemEX.png`
-  （同样没有 .cs，见 §3.3 第三条）。JobAcc 目录结构沿用姊妹工程 `CalamityDemutation`
-  （Melee / Magic / Ranged / Rogue / Summon）。
+  仍然**没有对应 .cs**，等用户给规格再落地；`Ranged/` 下 2026-10-17 新增的
+  `Ranger_Emblem.webp`（原素材）× `Vortex_armor.webp`（星旋胸甲配色参考）+ `RangerEmblemEX.png`
+  已经落地成 `RangerEmblemEX`（§5.5），那两张 .webp 只作参考图留档。
+  JobAcc 目录结构沿用姊妹工程 `CalamityDemutation`（Melee / Magic / Ranged / Rogue / Summon）。
 - **工程根目录的 `Daybroken.png`**：破晓EX 图标的参考副本，已入库为 `Content/Buffs/NegativeBuffs/DaybreakEX.png`；
   根目录那份用户没点名要删，暂时留着（要清理说一声即可）。
 - **图标**（`icon*.png`）仍是 tModLoader 模板图。
@@ -530,3 +557,8 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
   ③ 烈火手套EX 的价值 15 金（沿用徽章口径）；④ PvP 与多人实测（施加只算一次、客机表现一致）。
 - **战士EX 档（稀有度）配色可调**：`Content/Rarities/WarriorEXRarity.cs` 顶部的 `GradientColors` 四色与 `CycleSpeed`
   就是全部旋钮（觉得流得太快/太暗就改这两处）；档位显示名在两个语言文件的 `Rarities.WarriorEXRarity.DisplayName`。
+- **第五批待复核（2026-10-17，游侠徽章EX）**：① 未进游戏实测——重点看远程三围是否如数生效、
+  弹药初速是否真的 ×1.18（视觉上"打得更直更快"）、省弹手感是否约 1/5 发不扣（可按 `R` 键看弹药数）；
+  ② 「降低18%弹药消耗」我实现成 **18% 概率不消耗**，若用户本意是"弹药消耗量 ×0.82"（如一次扣 2 发的武器只扣 1.64）
+  那条路原版没有对应字段、只能整发判定，需用户点名再议；③ 价值 15 金、英文名 `Ranger Emblem EX`、
+  稀有度四色与 `CycleSpeed` 都是沿用/暂定项（`RangerEXRarity` 顶部同样是旋钮）。

@@ -61,6 +61,18 @@ Items: {
 			'''
 	}
 
+	RangerEmblemEX: {
+		DisplayName: 游侠徽章EX
+		Tooltip:
+			'''
+			+18% 远程伤害
+			+18% 远程暴击率
+			+18% 远程攻击速度
+			+18% 弹药飞行速度
+			18% 概率不消耗弹药
+			'''
+	}
+
 	WarriorEmblemEX: {
 		DisplayName: 战士徽章EX
 		Tooltip:
@@ -76,6 +88,7 @@ Items: {
 Rarities: {
 	NeutronRarity.DisplayName: 中子
 	WarriorEXRarity.DisplayName: 战士EX
+	RangerEXRarity.DisplayName: 游侠EX
 }
 
 Projectiles: {

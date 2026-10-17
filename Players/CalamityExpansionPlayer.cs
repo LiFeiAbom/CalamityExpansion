@@ -2,6 +2,9 @@
 using Terraria;
 using Terraria.ModLoader;
 using CalamityExpansion.Content.Items.Accessories.JobAcc.Melee;
+using Terraria.ID;
+using CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged;
+using Microsoft.Xna.Framework;
 namespace CalamityExpansion.Players
 {
     /// <summary>
@@ -24,6 +27,11 @@ namespace CalamityExpansion.Players
         /// </summary>
         public bool fireGauntletEX = false;
         /// <summary>
+        /// 玩家当前是否装备着游侠徽章EX（每帧由饰品置位，换代即失效）——
+        /// 供省弹（<see cref="CanConsumeAmmo"/>）与弹药弹速（<see cref="ModifyShootStats"/>）两个钩子读取
+        /// </summary>
+        public bool rangerEmblemEX = false;
+        /// <summary>
         /// 破晓EX 的附加时长（帧）：照原版破晓武器给的 5 秒
         /// </summary>
         public const int DaybreakEXDuration = 300;
@@ -42,6 +50,7 @@ namespace CalamityExpansion.Players
         {
             warriorEmblemEX = false;
             fireGauntletEX = false;
+            rangerEmblemEX = false;
         }
         /// <summary>
         /// 物品（近战挥砍 / 近战类物品命中）结算：命中后按近战分类附加本模组的近战减益
@@ -181,6 +190,32 @@ namespace CalamityExpansion.Players
             {
                 scale += FireGauntletEX.MeleeScaleBonus;
             }
+        }
+        /// <summary>
+        /// 18% 概率不消耗弹药（游侠徽章EX）：原版没有「任意百分比省弹」的字段（只有 20%/25% 那几个
+        /// 固定档的布尔量），故走 tModLoader 的 <c>CanConsumeAmmo</c>——返回 false 即这一发不扣弹药。
+        /// 判定只在射击方客户端跑（<c>PickAmmo</c> 本身是客户端逻辑），多人下不会双重触发。
+        /// </summary>
+        public override bool CanConsumeAmmo(Item weapon, Item ammo)
+        {
+            if (rangerEmblemEX && Main.rand.NextFloat() < RangerEmblemEX.AmmoSaveChance)
+            {
+                return false;
+            }
+            return true;
+        }
+        /// <summary>
+        /// 弹药飞行速度 +18%（游侠徽章EX）：<c>ModifyShootStats</c> 是射出前最后一次能改初速的钩子，
+        /// 直接乘在 velocity 上（与原版「魔法箭袋」对箭矢的处理同一个位置的效果）。
+        /// 只对**消耗弹药的远程武器**生效——非远程职业、以及不吃弹药的远程武器（<c>useAmmo = None</c>）不动。
+        /// </summary>
+        public override void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
+        {
+            if (!rangerEmblemEX || item.useAmmo == AmmoID.None || !item.CountsAsClass(DamageClass.Ranged))
+            {
+                return;
+            }
+            velocity *= 1f + RangerEmblemEX.AmmoVelocityBonus;
         }
     }
 }
