@@ -8,9 +8,10 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
     /// <summary>
     /// 狙击镜EX（SniperScopeEX） - 远程饰品。贴图是把狙击镜（Recon Scope）按 Crossbow_Scope 的复合造型重绘的
     /// `SniperScopeEX.png`（34×36，紫灰镜筒 + 金环 + 绿镜片，见 AGENTS.md §3.3 第四条）。
-    /// 属性（用户 2026-10-17 口述）：**+22% 远程伤害 / +22% 远程暴击率 / +22% 远程弹幕飞行速度 /
-    /// 40% 概率不消耗弹药 / +50 点远程护甲穿透**；额外：
-    /// ① 魔法箭袋效果；② **饰品可见时**获得侦察镜（Recon Scope）的缩放能力；
+    /// 属性（用户 2026-10-17 口述）：**+22% 远程伤害 / +22% 远程暴击率 / +22% 箭矢伤害 /
+    /// +22% 远程弹幕飞行速度 / 40% 概率不消耗弹药 / +50 点远程护甲穿透 / -400 仇恨**；额外：
+    /// ① **熔岩箭袋 + 潜行者箭袋**的效果（两者各 +10% 箭矢伤害、魔箭袋底子、着火箭，仇恨只算一次 -400）；
+    /// ② **饰品可见时**获得侦察镜（Recon Scope）的缩放能力；
     /// ③ 射出箭矢时 50% 概率**额外**射出一发夜明箭，射出子弹时 50% 概率**额外**射出一发夜明弹。
     /// <para>
     /// 全部用**原版弹幕**，本工程不新增弹幕：夜明箭 <c>ProjectileID.MoonlordArrow</c>(639)、
@@ -44,6 +45,14 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
         /// <summary>额外射出一发夜明箭 / 夜明弹的概率（0.5 = 50%）</summary>
         public const float ExtraLuminiteChance = 0.5f;
         /// <summary>
+        /// 熔岩箭袋 / 潜行者箭袋各自给的原版箭矢伤害加成（各 +10%，两个效果叠在一起就是 +20%）
+        /// </summary>
+        public const float QuiverArrowDamageBonus = 0.1f;
+        /// <summary>
+        /// 仇恨降低量（潜行者箭袋那条：原版 `aggro -= 400`）。两个箭袋都带这条，本饰品**只算一次**。
+        /// </summary>
+        public const int AggroReduction = 400;
+        /// <summary>
         /// 物品基础属性：34×36 的饰品贴图（与 Crossbow_Scope 同画布）。
         /// 稀有度沿用远程系 EX 档 <see cref="RangerEXRarity"/>（星旋绿青渐变字色）。
         /// </summary>
@@ -65,8 +74,14 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
             player.GetCritChance(DamageClass.Ranged) += RangedCritBonus;
             player.GetArmorPenetration(DamageClass.Ranged) += ArmorPenetration;
             player.arrowDamage += ArrowDamageBonus;
-            // 魔法箭袋：原版字段，箭矢伤害/速度加成与箭矢回收都挂在它身上
+            // ── 熔岩箭袋（Molten Quiver）的效果：与潜行者箭袋共用的魔箭袋底子 + 自己的箭伤 + 着火箭 ──
+            // 原版 Player.ApplyEquipFunctional 里 MoltenQuiver 分支就是这三行（IL 实查）
             player.magicQuiver = true;
+            player.arrowDamage += QuiverArrowDamageBonus;   // 熔岩箭袋的 +10% 箭矢伤害
+            player.hasMoltenQuiver = true;                  // 把普通箭点成火焰箭（PickAmmo 里读这个）
+            // ── 潜行者箭袋（Stalker's Quiver）的效果：箭伤 +10% 与 -400 仇恨 ──
+            player.arrowDamage += QuiverArrowDamageBonus;   // 潜行者箭袋的 +10% 箭矢伤害
+            player.aggro -= AggroReduction;                 // 原版是 aggro -= 400；这里只减一次
             // 侦察镜的缩放能力（原版 Player.scope）：只在饰品显示（未隐藏外观）时给，用户 2026-10-17 指定
             if (!hideVisual)
             {
@@ -75,14 +90,17 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
             player.GetModPlayer<CalamityExpansionPlayer>().sniperScopeEX = true;
         }
         /// <summary>
-        /// 配方（照 EX 饰品那套八味结构，底件换成侦察镜 ReconScope）：
-        /// 侦察镜 + 石巨人之眼 + 五种魂各 25 + 星旋碎片 50 @ 远古操纵机。
-        /// ⚠️ 用户 2026-10-17 没点名配方，这条是按游侠徽章EX 的口径推的，等点名再改。
+        /// 配方（2026-10-17 用户改过）：侦察镜 + **潜行者箭袋 + 熔岩箭袋** + 石巨人之眼
+        /// + 五种魂各 25 + 星旋碎片 50 @ 远古操纵机。
+        /// （用户原话「魔法箭袋改成潜行者箭袋 + 熔岩箭袋」；本条配方里原本没有魔法箭袋这一味，
+        /// 故按意思把这两个箭袋直接加进去。）
         /// </summary>
         public override void AddRecipes()
         {
             CreateRecipe()
                 .AddIngredient(ItemID.ReconScope)      // 侦察镜（原版）
+                .AddIngredient(ItemID.StalkersQuiver)  // 潜行者箭袋（原版）
+                .AddIngredient(ItemID.MoltenQuiver)    // 熔岩箭袋（原版）
                 .AddIngredient(ItemID.EyeoftheGolem)   // 石巨人之眼（原版字段名是小写 the）
                 .AddIngredient(ItemID.SoulofLight, 25)
                 .AddIngredient(ItemID.SoulofNight, 25)

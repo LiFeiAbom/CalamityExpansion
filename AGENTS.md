@@ -520,10 +520,15 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
 - **狙击镜EX**：远程饰品（JobAcc/Ranged）。贴图 `SniperScopeEX.png`（34×36 = 17×18 @2×，见 §3.3 第四条：
   按 Crossbow_Scope 的复合造型重绘、配色保持狙击镜原图那套紫灰 + 金环 + 绿镜片）。
   属性（用户 2026-10-17 口述）：**+22% 远程伤害 / +22% 远程暴击率 / +22% 箭矢伤害 /
-  +22% 远程弹幕飞行速度 / 40% 概率不消耗弹药 / +50 点远程护甲穿透**；另外三条特殊效果见下。
+  +22% 远程弹幕飞行速度 / 40% 概率不消耗弹药 / +50 点远程护甲穿透 / -400 仇恨**；另外三条特殊效果见下。
   其中「箭矢伤害」走原版 `player.arrowDamage += 0.22f`（同游侠徽章EX 那条，只吃箭类弹药）。
 - **特殊效果与落点**（全部用**原版弹幕**，本工程不新增任何弹幕——用户 2026-10-17 明确）：
-  - **魔法箭袋**：`player.magicQuiver = true`（原版字段，箭矢伤害/速度加成与回收都在它身上）。
+  - **熔岩箭袋 + 潜行者箭袋**（2026-10-17 用户把「魔法箭袋」换成这两个）：
+    IL 实查 `Player.ApplyEquipFunctional` 的两个分支——熔岩箭袋 = `magicQuiver = true` +
+    `arrowDamage += 0.1f` + `hasMoltenQuiver = true`（`PickAmmo` 读它把箭头点着）；
+    潜行者箭袋 = `magicQuiver = true` + `arrowDamage += 0.1f` + `aggro -= 400`。
+    本饰品按这两个效果落，**但仇恨只算一次 -400**（否则两个箭袋叠起来是 -800）；
+    箭矢伤害两者都吃（合计 +0.2，与同时戴两个箭袋一致）。旋钮：`QuiverArrowDamageBonus` / `AggroReduction`。
   - **侦察镜的缩放**：只在 **`hideVisual == false`**（饰品可见）时 `player.scope = true`。
     `Terraria.Player.scope` 是原版 Rifle/Sniper/Recon Scope 共用的那个缩放开关（已用 Cecil 实查确认字段存在）。
   - **额外夜明箭/弹**：`ModPlayer.Shoot`（**返回 bool，返回 false 会把这一发整个拦掉，所以永远 return true**），
@@ -547,9 +552,11 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
   ③ `GlobalProjectile.OnHitPlayer` 跑在被打中那名玩家的客户端（`Player.Hurt` 只对本机玩家跑）。
   —— 以后若再要在 PvP 里生成弹幕，仍需走「被打方发请求、服务端生成」那条路。
 - **稀有度**：沿用 `RangerEXRarity`（星旋绿青渐变字色）。
-- ⚠️ **待用户点名**：① 配方——用户没给，现按 EX 八味结构推了一条（侦察镜 `ReconScope` + 石巨人之眼 +
-  五种魂各 25 + 星旋碎片 50 @ 远古操纵机），要改说一声；② 价值 15 金、英文名 `Sniper Scope EX`；
-  ③ 额外夜明弹药的伤害沿用本次射击的伤害（没有单独加成）。
+- **配方（2026-10-17 用户改过）**：侦察镜 `ReconScope` + **潜行者箭袋 `StalkersQuiver` + 熔岩箭袋 `MoltenQuiver`**
+  + 石巨人之眼 + 五种魂各 25 + 星旋碎片 50 @ 远古操纵机。
+  （用户原话是「魔法箭袋改成潜行者箭袋 + 熔岩箭袋」，而这条配方里本来就没有魔法箭袋这一味，故把两个箭袋直接加进去。）
+- ⚠️ **待用户点名**：① 价值 15 金、英文名 `Sniper Scope EX`；
+  ② 额外夜明弹药的伤害沿用本次射击的伤害（没有单独加成）。
 - **待实测（2026-10-17）**：① 单人：夜明箭/弹是否 50% 概率双发、缩放是否只有可见时生效、命中时是否不再有火箭；
   ② 多人：额外夜明弹在其它客户端是否可见、卡顿是否消失。
 
