@@ -67,9 +67,24 @@ Items: {
 			'''
 			18% increased ranged damage
 			18% increased ranged critical strike chance
-			18% increased ranged attack speed
 			18% increased ammo velocity
 			82% chance not to consume ammo
+			'''
+	}
+
+	SniperScopeEX: {
+		DisplayName: Sniper Scope EX
+		Tooltip:
+			'''
+			22% increased ranged damage
+			22% increased ranged critical strike chance
+			22% increased ranged projectile velocity
+			+50 ranged armor penetration
+			40% chance not to consume ammo
+			Grants the effects of the Magic Quiver
+			50% chance to fire an extra Luminite Arrow or Luminite Bullet
+			Ranged projectile hits fire a Vortex Rocket
+			Grants the Recon Scope's zoom while visible
 			'''
 	}
 

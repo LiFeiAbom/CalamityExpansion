@@ -11,6 +11,9 @@
   ⑥ 文案（2026-10-17 追加）：两件近战饰品的 tooltip **不再列减益数值**，只留「近战命中会造成X」一句（见 §5.4 文案条）；
   ⑦ 第三张染色（2026-10-17 追加）：**游侠徽章 RangerEmblemEX** 贴图按星旋盔甲色系染好（§3.3 第三条）；
   ⑧ 第五批（2026-10-17 追加）：**游侠徽章EX**（远程饰品 + 星旋绿青渐变稀有度）按用户口述落地（§5.5）。
+  ⑨ 第六批（2026-10-17 追加）：**狙击镜EX**（§5.6）——复合造型贴图 + 22% 三围/40% 省弹/50 穿透 +
+  魔法箭袋 + 侦察镜缩放 + 额外夜明箭弹 + 命中发射星璇火箭（全部原版弹幕）；同时删掉游侠徽章EX 的远程攻速、
+  删掉四张参考图与根目录 `Daybroken.png`。
 - **当前状态**：C# 编译 **0 警告 0 错误**；`CheckImplicitTextures.ps1` 16 个类全命中、`CheckResources.ps1` 27 条全命中；
   `.tmod` 已打包进 `…\tModLoader\Mods\`。
 - **实测状态**：破晓EX 那一批用户进游戏测过、回「没有问题」；**烈火手套EX / 燃烧IV / 战士EX 档尚未进游戏实测**。
@@ -208,7 +211,11 @@ git -C ..\CalamityDemutation cat-file -s '19ad483^:<path>'                      
 - **用户口径（2026-10-17，纠正过一次）**：`Crossbow_Scope` 是**几支小镜筒 / 支架拼起来的复合体**
   （左上一条长管 + 中间并排的第二条 + 两个小红镜窗 + 右下大物镜）。要的是**把这支狙击镜也画成那种复合造型**，
   **不是**把狙击镜染成灰红。⚠️ 上一版把 Recon 重映射成「黑描边 + 灰金属 + 红镜片」被用户否掉（`12adc7e` 那版），别再那样做。
-- **输出**：`Ranged/ReconScope.png`（34×36 @2×，与 Crossbow_Scope 同画布/同造型，配色是狙击镜自己那套）。**没有 .cs**，WIP。
+- **输出**：`Ranged/SniperScopeEX.png`（34×36 @2×，与 Crossbow_Scope 同画布/同造型，配色是狙击镜自己那套）。
+  2026-10-17 起这张图已配上 `SniperScopeEX.cs`（§5.6），文件名也跟着物品改成了 `SniperScopeEX.png`。
+  ⚠️ 两张参考图（`Crossbow_Scope.png` / `Recon_Scope.webp`）与另外两张染色参考图
+  （`Ranger_Emblem.webp` / `Vortex_armor.webp`）、根目录的 `Daybroken.png` 已在 2026-10-17 按用户要求删除，
+  需要时从 git 历史（`21b02cf` 及以前）里取回。
 - **做法**：取 `Crossbow_Scope` 的**整个像素网格（含 18 色灰阶结构）**，把它的色板按「明度对应」换成狙击镜的色板——
   近黑/描边 `14~31` → 深紫描边 `(19,4,36)`；灰阶 `51/66/106/159/209` → 紫灰 `(45,52,83)/(81,75,96)/(120,115,144)/(155,150,176)/(177,174,196)`；
   红镜片 `94/128/255/196,55,55/255,128,128` → 绿镜片 `(39,74,42)/(39,74,42)/(95,135,85)/(139,182,128)/(213,224,169)`。
@@ -469,12 +476,14 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
 
 - **游侠徽章EX**：远程饰品（JobAcc/Ranged）。贴图 = §3.3 第三条那张按星旋盔甲色系染好的
   `RangerEmblemEX.png`（28×28，灰盘不动、银环走盔甲绿、箭身走绿色→青色发光阶）。
-  属性（用户 2026-10-17 口述）：**+18% 远程伤害 / +18% 远程暴击率 / +18% 远程攻击速度 /
+  属性（用户 2026-10-17 口述）：**+18% 远程伤害 / +18% 远程暴击率 /
   +18% 弹药飞行速度 / **82% 概率不消耗弹药**（2026-10-17 当天由 18% 改过来——用户先要 18%，
   后改口「算了改成82%概率不消耗弹药」；旋钮就是 `RangerEmblemEX.AmmoSaveChance`）。
 - **落点**（与战士徽章EX 同一套骨架）：
-  - 三围直接写 `player.GetDamage / GetCritChance / GetAttackSpeed(DamageClass.Ranged)`，
+  - 两围直接写 `player.GetDamage / GetCritChance(DamageClass.Ranged)`，
     并给 `CalamityExpansionPlayer.rangerEmblemEX` 置位（`ResetEffects` 每帧复位）。
+    ⚠️ **2026-10-17 用户点名删掉了「远程攻击速度」**（`GetAttackSpeed` 那行已移除、tooltip 那行也删了）——
+    注意区分：`弹药飞行速度`（弹幕初速，走 `ModifyShootStats`）保留，`远程射击速度`（攻速）不要。
   - **省弹**走 `ModPlayer.CanConsumeAmmo`（返回 false = 这一发不扣弹药）：原版只有 20%/25% 那几个
     固定档的布尔量（`ammoCost80` / `ammoCost75` / `ammoCost99`），没有任意百分比的口子，所以只能走钩子。
     IL 实查：调用点在 `Player.IsAmmoFreeThisShot`，判定天然只在射击方客户端跑。
@@ -490,6 +499,33 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
   每帧循环插值，`CycleSpeed = 0.35` 与战士EX 档同节奏。档位显示名 `Rarities.RangerEXRarity.DisplayName`
   （中「游侠EX」/ 英 `Ranger EX`）。
 - 价值 15 金（沿用战士徽章EX 口径）；英文名 `Ranger Emblem EX`（沿用 `Warrior Emblem EX` 的命名法）。
+
+### 5.6 狙击镜EX（SniperScopeEX，2026-10-17 第六批）
+
+- **狙击镜EX**：远程饰品（JobAcc/Ranged）。贴图 `SniperScopeEX.png`（34×36 = 17×18 @2×，见 §3.3 第四条：
+  按 Crossbow_Scope 的复合造型重绘、配色保持狙击镜原图那套紫灰 + 金环 + 绿镜片）。
+  属性（用户 2026-10-17 口述）：**+22% 远程伤害 / +22% 远程暴击率 / +22% 远程弹幕飞行速度 /
+  40% 概率不消耗弹药 / +50 点远程护甲穿透**；另外四条特殊效果见下。
+- **特殊效果与落点**（全部用**原版弹幕**，本工程不新增任何弹幕——用户 2026-10-17 明确）：
+  - **魔法箭袋**：`player.magicQuiver = true`（原版字段，箭矢伤害/速度加成与回收都在它身上）。
+  - **侦察镜的缩放**：只在 **`hideVisual == false`**（饰品可见）时 `player.scope = true`。
+    `Terraria.Player.scope` 是原版 Rifle/Sniper/Recon Scope 共用的那个缩放开关（已用 Cecil 实查确认字段存在）。
+  - **额外夜明箭/弹**：`ModPlayer.Shoot`（**返回 bool，返回 false 会把这一发整个拦掉，所以永远 return true**），
+    读 `source.AmmoItemIdUsed` → `ContentSamples.ItemsByType[...].ammo`：
+    箭类 50% 额外生成 `ProjectileID.MoonlordArrow`(639)，子弹类 50% 额外生成 `ProjectileID.MoonlordBullet`(638)；
+    额外那发与原弹垂直错开 8 像素，避免完全重叠。**是「多射一发」，不是把原弹药换成夜明弹药**
+    （用户 2026-10-17 先说要替换、随后改成额外射出一发）。
+  - **命中发射星璇火箭**：`OnHitNPCWithProj` 里，装备本饰品 + 这一击算 `DamageClass.Ranged` 时，
+    生成 `ProjectileID.VortexBeaterRocket`(616)——就是星璇机枪那枚原版火箭。伤害取
+    发射它的那枚弹幕的 `proj.damage`（不取实际打出的 damageDone，避免暴击/减伤放大）。
+    ⚠️ **必须挡 `proj.type == ProjectileID.VortexBeaterRocket`**，否则火箭命中会再生火箭、无限链。
+    只在 `Main.myPlayer == Player.whoAmI` 端生成，原版负责同步。
+- **省弹 / 弹速**：与游侠徽章EX 共用 `CalamityExpansionPlayer.CanConsumeAmmo` / `ModifyShootStats`
+  （两件同时装备时省弹各自独立掷一次、弹速乘算叠加）。
+- **稀有度**：沿用 `RangerEXRarity`（星旋绿青渐变字色）。
+- ⚠️ **待用户点名**：① 配方——用户没给，现按 EX 八味结构推了一条（侦察镜 `ReconScope` + 石巨人之眼 +
+  五种魂各 25 + 星旋碎片 50 @ 远古操纵机），要改说一声；② 价值 15 金、英文名 `Sniper Scope EX`；
+  ③ 额外夜明弹药的伤害沿用本次射击的伤害（没有单独加成）。
 
 ## 6. 工作流
 
@@ -567,8 +603,9 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
   仍然**没有对应 .cs**，等用户给规格再落地；`Ranged/` 下 2026-10-17 新增的
   `Ranger_Emblem.webp`（原素材）× `Vortex_armor.webp`（星旋胸甲配色参考）+ `RangerEmblemEX.png`
   已经落地成 `RangerEmblemEX`（§5.5），那两张 .webp 只作参考图留档。
-  同目录另有 2026-10-17 新增的 `Crossbow_Scope.png`（格式参考）、`Recon_Scope.webp`（原素材）与
-  `ReconScope.png`（按 Crossbow 格式重绘的狙击镜，见 §3.3 第四条）——**还没配 .cs**。
+  同目录的狙击镜贴图已经改名成 `SniperScopeEX.png` 并配了 `SniperScopeEX.cs`（§5.6）；
+  四张参考图（`Crossbow_Scope.png` / `Recon_Scope.webp` / `Ranger_Emblem.webp` / `Vortex_armor.webp`）
+  与根目录 `Daybroken.png` 已经在 2026-10-17 按用户要求删掉（要找回从 git 历史取）。
   JobAcc 目录结构沿用姊妹工程 `CalamityDemutation`（Melee / Magic / Ranged / Rogue / Summon）。
 - **工程根目录的 `Daybroken.png`**：破晓EX 图标的参考副本，已入库为 `Content/Buffs/NegativeBuffs/DaybreakEX.png`；
   根目录那份用户没点名要删，暂时留着（要清理说一声即可）。

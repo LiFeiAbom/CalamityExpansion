@@ -5,6 +5,7 @@ using CalamityExpansion.Content.Items.Accessories.JobAcc.Melee;
 using Terraria.ID;
 using CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged;
 using Microsoft.Xna.Framework;
+using Terraria.DataStructures;
 namespace CalamityExpansion.Players
 {
     /// <summary>
@@ -32,6 +33,11 @@ namespace CalamityExpansion.Players
         /// </summary>
         public bool rangerEmblemEX = false;
         /// <summary>
+        /// 玩家当前是否装备着狙击镜EX（每帧由饰品置位，换代即失效）——
+        /// 供省弹、弹速、额外夜明弹药、命中发射星璇火箭四个钩子读取
+        /// </summary>
+        public bool sniperScopeEX = false;
+        /// <summary>
         /// 破晓EX 的附加时长（帧）：照原版破晓武器给的 5 秒
         /// </summary>
         public const int DaybreakEXDuration = 300;
@@ -51,6 +57,7 @@ namespace CalamityExpansion.Players
             warriorEmblemEX = false;
             fireGauntletEX = false;
             rangerEmblemEX = false;
+            sniperScopeEX = false;
         }
         /// <summary>
         /// 物品（近战挥砍 / 近战类物品命中）结算：命中后按近战分类附加本模组的近战减益
@@ -65,6 +72,32 @@ namespace CalamityExpansion.Players
         public override void OnHitNPCWithProj(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
             ApplyMeleeHitDebuffs(target, hit.DamageType);
+            SpawnVortexRocketOnRangedHit(proj, target, hit);
+        }
+
+        /// <summary>
+        /// 远程弹幕每命中目标一次，发射一枚**原版**星璇火箭（<c>ProjectileID.VortexBeaterRocket</c> = 616，
+        /// 即星璇机枪那枚火箭；本工程不新增弹幕）。
+        /// <para>
+        /// 判据：装备了狙击镜EX + 这一击算远程 + 不是火箭自己打出来的（否则火箭命中会再生成火箭，无限链）。
+        /// 只在弹幕拥有者的客户端生成（<c>Main.myPlayer == Player.whoAmI</c>），原版会负责同步。
+        /// 伤害取**发射它的那枚弹幕**的 <c>damage</c>（不按实际打出的 damageDone，免得暴击/减伤把它放大）。
+        /// </para>
+        /// </summary>
+        private void SpawnVortexRocketOnRangedHit(Projectile proj, NPC target, NPC.HitInfo hit)
+        {
+            if (!sniperScopeEX || !hit.DamageType.CountsAsClass(DamageClass.Ranged))
+            {
+                return;
+            }
+            if (proj.type == ProjectileID.VortexBeaterRocket || Player.whoAmI != Main.myPlayer)
+            {
+                return;
+            }
+            Vector2 direction = (target.Center - Player.Center).SafeNormalize(-Vector2.UnitY);
+            Vector2 spawnPosition = Player.Center + direction * 24f;
+            Projectile.NewProjectile(Player.GetSource_OnHit(target), spawnPosition, direction * 14f
+                , ProjectileID.VortexBeaterRocket, proj.damage, 0f, Player.whoAmI);
         }
         /// <summary>
         /// 敌怪路的施加口：只有近战命中才附加（按 <c>DamageClass.Melee</c> 过滤命中类型，
@@ -202,6 +235,11 @@ namespace CalamityExpansion.Players
             {
                 return false;
             }
+            // 狙击镜EX：40% 概率不消耗（两件同时装备时各自独立掷一次，任一命中就省下这一发）
+            if (sniperScopeEX && Main.rand.NextFloat() < SniperScopeEX.AmmoSaveChance)
+            {
+                return false;
+            }
             return true;
         }
         /// <summary>
@@ -211,11 +249,63 @@ namespace CalamityExpansion.Players
         /// </summary>
         public override void ModifyShootStats(Item item, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
-            if (!rangerEmblemEX || item.useAmmo == AmmoID.None || !item.CountsAsClass(DamageClass.Ranged))
+            if (item.useAmmo == AmmoID.None || !item.CountsAsClass(DamageClass.Ranged))
             {
                 return;
             }
-            velocity *= 1f + RangerEmblemEX.AmmoVelocityBonus;
+            if (rangerEmblemEX)
+            {
+                velocity *= 1f + RangerEmblemEX.AmmoVelocityBonus;
+            }
+            // 狙击镜EX：远程弹幕飞行速度 +22%（同样是初速，不是攻速；两件叠加时乘算）
+            if (sniperScopeEX)
+            {
+                velocity *= 1f + SniperScopeEX.ProjectileVelocityBonus;
+            }
+        }
+        /// <summary>
+        /// 射击瞬间：狙击镜EX 有 50% 概率**额外**射出一发原版夜明箭 / 夜明弹
+        /// （用户 2026-10-17 口径：是「多射一发」，不是把原来的弹药换成夜明弹）。
+        /// <para>
+        /// 这里能拿到本次实际使用的弹药（<c>source.AmmoItemIdUsed</c>），所以按弹药的
+        /// <c>ammo</c> 分类判断：箭类 → <c>ProjectileID.MoonlordArrow</c>(639)，
+        /// 子弹类 → <c>ProjectileID.MoonlordBullet</c>(638)。两次都用原版弹幕，不新增类型。
+        /// 额外那发在垂直方向错开 8 像素、初速同向，避免和原弹完全重叠。
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// ⚠️ 这个钩子**返回 bool**：返回 false 会把这一发原版弹幕整个拦掉，所以这里永远 <c>return true</c>，
+        /// 额外那发是用 <c>Projectile.NewProjectile</c> 自己补的（只加不减）。
+        /// </remarks>
+        public override bool Shoot(Item item, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
+        {
+            if (!sniperScopeEX || Main.rand.NextFloat() >= SniperScopeEX.ExtraLuminiteChance)
+            {
+                return true;
+            }
+            int ammoType = source.AmmoItemIdUsed;
+            if (ammoType <= ItemID.None || ammoType >= ItemLoader.ItemCount)
+            {
+                return true;
+            }
+            int ammoClass = ContentSamples.ItemsByType[ammoType].ammo;
+            int extraType;
+            if (ammoClass == AmmoID.Arrow)
+            {
+                extraType = ProjectileID.MoonlordArrow;
+            }
+            else if (ammoClass == AmmoID.Bullet)
+            {
+                extraType = ProjectileID.MoonlordBullet;
+            }
+            else
+            {
+                return true;   // 火箭 / 飞镖 / 溶液等其它弹药不参与
+            }
+            Vector2 direction = velocity.SafeNormalize(Vector2.UnitX);
+            Vector2 offset = new Vector2(-direction.Y, direction.X) * 8f;
+            Projectile.NewProjectile(source, position + offset, velocity, extraType, damage, knockback, Player.whoAmI);
+            return true;
         }
     }
 }

@@ -8,8 +8,9 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
     /// <summary>
     /// 游侠徽章EX（RangerEmblemEX） - 月后远程饰品。贴图是原版游侠徽章按**星旋盔甲**色系染成的
     /// 「灰盘 + 绿环 + 青色能量箭」（2026-10-17，做法见 AGENTS.md §3.3 第三条）。
-    /// 属性（用户 2026-10-17 指定）：+18% 远程伤害、+18% 远程暴击率、+18% 远程攻击速度、
-    /// +18% 弹药飞行速度、**82% 概率不消耗弹药**。
+    /// 属性（用户 2026-10-17 指定）：+18% 远程伤害、+18% 远程暴击率、
+    /// +18% 弹药飞行速度、**82% 概率不消耗弹药**（**不含远程射击速度**——用户 2026-10-17 点名删掉，
+    /// 注意「弹药飞行速度」是弹幕初速，不要和近战/远程的攻速混为一谈）。
     /// <para>
     /// 落点：三围直接在本类的 <see cref="UpdateAccessory"/> 里加；「省弹」与「弹速」要到真正消耗/射出那一刻
     /// 才有对象可改，故写在 <see cref="CalamityExpansionPlayer"/> 的 <c>CanConsumeAmmo</c> /
@@ -22,7 +23,7 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
     /// </summary>
     internal class RangerEmblemEX : ModItem
     {
-        /// <summary>远程伤害与远程攻击速度的加成幅度（按比例加，用户 2026-10-17 指定 18%）</summary>
+        /// <summary>远程伤害与弹药飞行速度的加成幅度（按比例加，用户 2026-10-17 指定 18%）</summary>
         public const float RangedBonus = 0.18f;
         /// <summary>远程暴击率加成（按百分点加，18 = +18%）</summary>
         public const float RangedCritBonus = 18f;
@@ -50,7 +51,6 @@ namespace CalamityExpansion.Content.Items.Accessories.JobAcc.Ranged
         {
             player.GetDamage(DamageClass.Ranged) += RangedBonus;
             player.GetCritChance(DamageClass.Ranged) += RangedCritBonus;
-            player.GetAttackSpeed(DamageClass.Ranged) += RangedBonus;
             player.GetModPlayer<CalamityExpansionPlayer>().rangerEmblemEX = true;
         }
         /// <summary>
