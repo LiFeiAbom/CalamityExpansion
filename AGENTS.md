@@ -13,7 +13,7 @@
   ⑧ 第五批（2026-10-17 追加）：**游侠徽章EX**（远程饰品 + 星旋绿青渐变稀有度）按用户口述落地（§5.5）。
   ⑨ 第六批（2026-10-17 追加）：**狙击镜EX**（§5.6）——复合造型贴图 + 22% 三围/40% 省弹/50 穿透 +
   魔法箭袋 + 侦察镜缩放 + 额外夜明箭弹 + 命中发射星璇火箭（全部原版弹幕）；同时删掉游侠徽章EX 的远程攻速、
-  删掉四张参考图与根目录 `Daybroken.png`。
+  删掉四张参考图与根目录 `Daybroken.png`；并补齐 **PvP/多人适配**（本工程第一次用 `ModPacket`）。
 - **当前状态**：C# 编译 **0 警告 0 错误**；`CheckImplicitTextures.ps1` 16 个类全命中、`CheckResources.ps1` 27 条全命中；
   `.tmod` 已打包进 `…\tModLoader\Mods\`。
 - **实测状态**：破晓EX 那一批用户进游戏测过、回「没有问题」；**烈火手套EX / 燃烧IV / 战士EX 档尚未进游戏实测**。
@@ -522,10 +522,26 @@ PvP 施加加了 `Content/Items/CalamityExpansionGlobalItem.cs`（**无实例字
     只在 `Main.myPlayer == Player.whoAmI` 端生成，原版负责同步。
 - **省弹 / 弹速**：与游侠徽章EX 共用 `CalamityExpansionPlayer.CanConsumeAmmo` / `ModifyShootStats`
   （两件同时装备时省弹各自独立掷一次、弹速乘算叠加）。
+- **PvP / 多人适配（2026-10-17 补齐）**：
+  - **打敌怪**：`OnHitNPCWithProj` 的生成只在弹幕拥有者客户端发生（IL 实查 `Projectile.Damage`：
+    `owner != Main.myPlayer` 会直接跳过整段 NPC 伤害逻辑），所以火箭天然只有一份，且 owner == 本机 → 原版自动同步。
+  - **打玩家（PvP）**：`GlobalProjectile.OnHitPlayer` 的调用链是
+    `Player.Hurt` → `CombinedHooks.OnHitByProjectile` → `ProjectileLoader.OnHitPlayer`，
+    **只跑在被打中那名玩家的客户端**；而 `Projectile.NewProjectile` 只在 `owner == Main.myPlayer` 的客户端发包同步
+    （IL 实查 `Projectile.NewProjectile` IL_0715）。故 PvP 不能在原地生成，改成：
+    被打方客户端发 `CalamityExpansion.CeMessage.SniperScopePvPRocket`（owner + 位置 + 速度 + 伤害）给服务端 →
+    服务端校验 owner 确实戴着狙击镜EX（**查 `armor[3..9]` 而不是 ModPlayer 标记**，专用服务器不跑 `UpdateAccessory`）→
+    服务端 `Projectile.NewProjectile`（owner = 攻击者）→ 原版广播给所有客户端（含被打方，看得见）。
+    伤害做了 1..1,000,000 的上界保护，索引越界直接丢弃。
+  - **纯本地项**：省弹、弹速、额外夜明箭/弹、三围加成都在射击方客户端算，天然各端一致；
+    额外那发夜明弹的 owner 就是自己，正常同步。魔法箭袋与 `player.scope` 只影响本机操作手感，设给远端玩家也无副作用。
 - **稀有度**：沿用 `RangerEXRarity`（星旋绿青渐变字色）。
 - ⚠️ **待用户点名**：① 配方——用户没给，现按 EX 八味结构推了一条（侦察镜 `ReconScope` + 石巨人之眼 +
   五种魂各 25 + 星旋碎片 50 @ 远古操纵机），要改说一声；② 价值 15 金、英文名 `Sniper Scope EX`；
   ③ 额外夜明弹药的伤害沿用本次射击的伤害（没有单独加成）。
+- **待实测（2026-10-17）**：① 单人：夜明箭/弹是否 50% 概率双发、火箭是否每次远程命中都出、缩放是否只有可见时生效；
+  ② 多人：额外夜明弹在其它客户端是否可见、火箭生成是否只出现一份（不漏不重）；
+  ③ PvP：被打方是否看到火箭、攻击方是否也看到、火箭对玩家是否只结算一次伤害、服务端日志有无封包异常。
 
 ## 6. 工作流
 

@@ -94,10 +94,68 @@ namespace CalamityExpansion.Players
             {
                 return;
             }
-            Vector2 direction = (target.Center - Player.Center).SafeNormalize(-Vector2.UnitY);
-            Vector2 spawnPosition = Player.Center + direction * 24f;
-            Projectile.NewProjectile(Player.GetSource_OnHit(target), spawnPosition, direction * 14f
-                , ProjectileID.VortexBeaterRocket, proj.damage, 0f, Player.whoAmI);
+            SpawnVortexRocket(Player, target, proj.damage);
+        }
+        /// <summary>
+        /// PvP 路的「远程命中发射星璇火箭」：由
+        /// <c>CalamityExpansionGlobalProjectile.OnHitPlayer</c>（弹幕打玩家）调用，
+        /// 判据与打敌怪那条完全一致，只是目标换成玩家。
+        /// <para>
+        /// 多人口径：本方法在**被命中玩家的客户端**执行（<c>Player.Hurt</c> 只对本机玩家跑），
+        /// 因此每次 PvP 命中只会有一次生成；生成出来的火箭 owner 仍是攻击方
+        /// （<c>attacker.whoAmI</c>），tModLoader/原版会把它同步给服务端与其它客户端。
+        /// 服务端不跑本方法（那里没有玩家结算）。
+        /// </para>
+        /// </summary>
+        public static void TrySpawnVortexRocketOnPvP(Player attacker, Player target, Projectile projectile)
+        {
+            if (attacker is null || !attacker.active || !target.active)
+            {
+                return;
+            }
+            if (Main.netMode == NetmodeID.Server)
+            {
+                return;
+            }
+            if (!attacker.GetModPlayer<CalamityExpansionPlayer>().sniperScopeEX)
+            {
+                return;
+            }
+            if (!projectile.DamageType.CountsAsClass(DamageClass.Ranged)
+                || projectile.type == ProjectileID.VortexBeaterRocket)
+            {
+                return;   // 非远程不生成；火箭自己的命中也不再生成（防无限链）
+            }
+            // 多人：本方法跑在「被打中那名玩家」的客户端，而原版只让 owner 本机同步新弹幕，
+            // 所以这里不能直接生成——发包给服务端，由服务端校验后生成并广播。
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                Vector2 direction = (target.Center - attacker.Center).SafeNormalize(-Vector2.UnitY);
+                Vector2 spawnPosition = attacker.Center + direction * 24f;
+                Vector2 velocity = direction * 14f;
+                ModPacket packet = CalamityExpansion.Instance.GetPacket();
+                packet.Write((byte)CalamityExpansion.CeMessage.SniperScopePvPRocket);
+                packet.Write((byte)attacker.whoAmI);
+                packet.Write(spawnPosition.X);
+                packet.Write(spawnPosition.Y);
+                packet.Write(velocity.X);
+                packet.Write(velocity.Y);
+                packet.Write(projectile.damage);
+                packet.Send();
+                return;
+            }
+            SpawnVortexRocket(attacker, target, projectile.damage);
+        }
+        /// <summary>
+        /// 生成一枚原版星璇火箭：从拥有者身上朝目标方向打出，伤害取来源弹幕的 <c>damage</c>。
+        /// 敌怪路与 PvP 路共用。
+        /// </summary>
+        private static void SpawnVortexRocket(Player owner, Entity target, int damage)
+        {
+            Vector2 direction = (target.Center - owner.Center).SafeNormalize(-Vector2.UnitY);
+            Vector2 spawnPosition = owner.Center + direction * 24f;
+            Projectile.NewProjectile(owner.GetSource_OnHit(target), spawnPosition, direction * 14f
+                , ProjectileID.VortexBeaterRocket, damage, 0f, owner.whoAmI);
         }
         /// <summary>
         /// 敌怪路的施加口：只有近战命中才附加（按 <c>DamageClass.Melee</c> 过滤命中类型，
